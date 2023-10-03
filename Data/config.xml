@@ -1,0 +1,121 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<UserConfig>
+  <Version>3</Version>
+  <Culture p2:nil="true" xmlns:p2="http://www.w3.org/2001/XMLSchema-instance" />
+  <FormStates>
+    <FormState>
+      <Name>ProgressForm</Name>
+      <Location>
+        <X>514</X>
+        <Y>376</Y>
+      </Location>
+      <Size>
+        <Width>440</Width>
+        <Height>106</Height>
+      </Size>
+      <Maximized>false</Maximized>
+    </FormState>
+    <FormState>
+      <Name>EditProfileForm</Name>
+      <Location>
+        <X>523</X>
+        <Y>216</Y>
+      </Location>
+      <Size>
+        <Width>422</Width>
+        <Height>426</Height>
+      </Size>
+      <Maximized>false</Maximized>
+    </FormState>
+    <FormState>
+      <Name>ProfilesForm</Name>
+      <Location>
+        <X>455</X>
+        <Y>352</Y>
+      </Location>
+      <Size>
+        <Width>558</Width>
+        <Height>155</Height>
+      </Size>
+      <Maximized>false</Maximized>
+    </FormState>
+    <FormState>
+      <Name>WinFormsDesktopForm</Name>
+      <Location>
+        <X>130</X>
+        <Y>130</Y>
+      </Location>
+      <Size>
+        <Width>1209</Width>
+        <Height>600</Height>
+      </Size>
+      <Maximized>false</Maximized>
+    </FormState>
+  </FormStates>
+  <CheckForUpdates>false</CheckForUpdates>
+  <LastUpdateCheckDate p2:nil="true" xmlns:p2="http://www.w3.org/2001/XMLSchema-instance" />
+  <FirstRunDate>2023-09-20T23:02:01.7544966-04:00</FirstRunDate>
+  <LastDonatePromptDate p2:nil="true" xmlns:p2="http://www.w3.org/2001/XMLSchema-instance" />
+  <EnableOcr>false</EnableOcr>
+  <OcrLanguageCode p2:nil="true" xmlns:p2="http://www.w3.org/2001/XMLSchema-instance" />
+  <OcrMode>Fast</OcrMode>
+  <OcrAfterScanning>false</OcrAfterScanning>
+  <LastImageExt p2:nil="true" xmlns:p2="http://www.w3.org/2001/XMLSchema-instance" />
+  <PdfSettings>
+    <DefaultFileName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SkipSavePrompt>false</SkipSavePrompt>
+    <SinglePagePdfs>false</SinglePagePdfs>
+    <Metadata>
+      <Author></Author>
+      <Creator></Creator>
+      <Keywords></Keywords>
+      <Subject></Subject>
+      <Title></Title>
+    </Metadata>
+    <Encryption>
+      <EncryptPdf>false</EncryptPdf>
+      <UserPassword p4:nil="true" xmlns:p4="http://www.w3.org/2001/XMLSchema-instance" />
+      <OwnerPassword p4:nil="true" xmlns:p4="http://www.w3.org/2001/XMLSchema-instance" />
+      <AllowContentCopyingForAccessibility>true</AllowContentCopyingForAccessibility>
+      <AllowAnnotations>true</AllowAnnotations>
+      <AllowDocumentAssembly>true</AllowDocumentAssembly>
+      <AllowContentCopying>true</AllowContentCopying>
+      <AllowFormFilling>true</AllowFormFilling>
+      <AllowFullQualityPrinting>true</AllowFullQualityPrinting>
+      <AllowDocumentModification>true</AllowDocumentModification>
+      <AllowPrinting>true</AllowPrinting>
+    </Encryption>
+    <Compat>Default</Compat>
+  </PdfSettings>
+  <ImageSettings>
+    <DefaultFileName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SkipSavePrompt>false</SkipSavePrompt>
+    <JpegQuality>75</JpegQuality>
+    <TiffCompression>Auto</TiffCompression>
+    <SinglePageTiff>false</SinglePageTiff>
+  </ImageSettings>
+  <EmailSettings>
+    <AttachmentName>Scan.pdf</AttachmentName>
+  </EmailSettings>
+  <EmailSetup>
+    <ProviderType>System</ProviderType>
+    <SystemProviderName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <GmailUser p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <GmailToken p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <OutlookWebUser p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <OutlookWebToken p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpHost p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpFrom p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpPort p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpTls p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpUser p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <SmtpPassword p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+  </EmailSetup>
+  <ThumbnailSize>128</ThumbnailSize>
+  <DesktopToolStripDock>Top</DesktopToolStripDock>
+  <CustomPageSizePresets />
+  <KeyboardShortcuts />
+  <HasBeenRun>true</HasBeenRun>
+  <BackgroundOperations />
+  <BatchSettings />
+</UserConfig>
