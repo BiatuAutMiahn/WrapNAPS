@@ -13,8 +13,14 @@ Features:
   -Option to remember last settings
   -Option to keep open for batch scans.
   -Option to launch full NAPS2.
+  -Update checking.
+
+About the update checker:
+  -Currently the update function will check the VERSION file in this repo against the interval version, and then it will download Init.NAPS2.
+  -The current version and all previous versions are stored in AppData/Local/Programs/NAPS2/Snaps/WrapNAPS2_v1.YYMM.DDHH.mmSS.exe
 
 Screenshot:
 
-![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/515c2fcc-6122-4d59-a43d-f596357248d5)
+![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/0cb677a7-b63f-4ed5-90b4-650bc3c3063f)
+
 
