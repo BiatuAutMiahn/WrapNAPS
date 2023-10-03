@@ -15,5 +15,6 @@ Features:
   -Option to launch full NAPS2.
 
 Screenshot:
+
 ![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/81a264f0-3467-49b1-b9e2-e0525562f95b)
 
