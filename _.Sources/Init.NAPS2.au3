@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.317.4823
+#AutoIt3Wrapper_Res_Fileversion=1.2310.317.5018
 #AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_Fileversion_First_Increment=y
@@ -37,7 +37,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.317.4823"
+Global Const $VERSION = "1.2310.317.5018"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
