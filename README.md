@@ -16,5 +16,5 @@ Features:
 
 Screenshot:
 
-![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/81a264f0-3467-49b1-b9e2-e0525562f95b)
+![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/515c2fcc-6122-4d59-a43d-f596357248d5)
 
