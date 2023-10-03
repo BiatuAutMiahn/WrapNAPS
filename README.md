@@ -20,8 +20,6 @@ About the update checker:
   -The current version and all previous versions are stored in AppData/Local/Programs/NAPS2/Snaps/WrapNAPS2_v1.YYMM.DDHH.mmSS.exe
 
 Screenshot:
-
-![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/c4c714f4-0f7d-45f8-82c7-9e4ec7cda740)
-
+![capture_004_03102023_180034](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/717917fd-7698-4561-b27b-45b1c47829eb)
 
 
