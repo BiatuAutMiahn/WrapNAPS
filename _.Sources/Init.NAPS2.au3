@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.317.5018
+#AutoIt3Wrapper_Res_Fileversion=1.2310.317.5559
 #AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
 #AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
 #AutoIt3Wrapper_Res_Fileversion_First_Increment=y
@@ -37,7 +37,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.317.5018"
+Global Const $VERSION = "1.2310.317.5559"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
@@ -806,7 +806,12 @@ Func _Update($bPost=0)
         _Log("Error: Recieved HTTP Error 404 while checking for update","_Update")
         Return SetError(1,7,0)
     EndIf
-    Local $vVer=_VersionCompare($sRet,$VERSION)
+    ConsoleWrite($VERSION&@CRLF)
+    ConsoleWrite($sRet&@CRLF)
+    ConsoleWrite(StringToBinary($VERSION)&@CRLF)
+    ConsoleWrite(StringToBinary($sRet)&@CRLF)
+    Local $vVer=_VersionCompare($VERSION,$sRet)
+    ConsoleWrite($vVer&@CRLF)
     If @error Then
         _Log("Error during update version comparison."&$sRet,"_Update")
         Return SetError(1,8,0)
