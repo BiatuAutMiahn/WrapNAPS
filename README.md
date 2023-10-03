@@ -21,6 +21,7 @@ About the update checker:
 
 Screenshot:
 
-![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/0cb677a7-b63f-4ed5-90b4-650bc3c3063f)
+![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/c4c714f4-0f7d-45f8-82c7-9e4ec7cda740)
+
 
 
