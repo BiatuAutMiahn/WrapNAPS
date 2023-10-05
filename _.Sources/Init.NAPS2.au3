@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.513.3750
+#AutoIt3Wrapper_Res_Fileversion=1.2310.513.4538
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -39,20 +39,20 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.513.3750"
+Global Const $VERSION = "1.2310.513.4538"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
 If Not @Compiled Then $sBaseDir=@ScriptDir&"\.."
 Global $sSnapsDir=$sBaseDir&"\Snaps"
-Global $sLogPath=$sBaseDir&'\'&$sTitle&".log"
+Global $sLogPath=$sBaseDir&"\logs\"&$sTitle&".log"
 Global $bgNoLog=False, $g_iLogConsole = False
 Global $g_oCOMError, $g_oCOMErrorDef, $g_iCOMError=0, $g_iCOMErrorExt=0, $g_sCOMError="", $g_sCOMErrorFunc="", $g_bCOMErrorLog=True
 Global $g_oCOMErrorDef = ObjEvent("AutoIt.Error")
 Global $g_oCOMError = ObjEvent("AutoIt.Error", "_COMErrorFunc")
 
-
+If Not _isDir($sBaseDir&"\logs") Then DirCreate($sBaseDir&"\logs")
 If _WinAPI_GetVersion()<10 Then
     MsgBox(16,$sTitle,"This program does support this version of windows!")
     Exit 1
