@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.514.1853
+#AutoIt3Wrapper_Res_Fileversion=1.2310.514.2852
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -19,6 +19,8 @@
  Author:         BiatuAutMiahn[@outlook.com]
 
 #ce ----------------------------------------------------------------------------
+
+Global Const $VERSION = "1.2310.514.2852"
 
 #include <ProcessConstants.au3>
 #include <WinAPIProc.au3>
@@ -39,14 +41,13 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.514.1853"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
 If Not @Compiled Then $sBaseDir=@ScriptDir&"\.."
 Global $sSnapsDir=$sBaseDir&"\Snaps"
-Global $sLogPath=$sBaseDir&"\logs\"&$sTitle&".log"
+Global $sLogPath=$sBaseDir&"\logs\"&$sAlias&".log"
 Global $bgNoLog=False, $g_iLogConsole = False
 Global $g_oCOMError, $g_oCOMErrorDef, $g_iCOMError=0, $g_iCOMErrorExt=0, $g_sCOMError="", $g_sCOMErrorFunc="", $g_bCOMErrorLog=True
 Global $g_oCOMErrorDef = ObjEvent("AutoIt.Error")
@@ -656,13 +657,18 @@ Func _COMErrorFunc()
     If $g_bCOMErrorLog Then _Log($g_sCOMError,$g_sCOMErrorFunc)
 EndFunc
 
-Func _Log($sStr,$sFunc="Main")
+Func _Log($sStr,$sFunc="Main",$sPath=$sLogPath)
     If $bgNoLog Then Return
     Local $sStamp=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&':'&@MIN&':'&@SEC&'.'&@MSEC
     Local $sErr="+["&$g_sSessMagic&'|'&$sStamp&"|"&@ComputerName&"|"&@UserName&"|"&@ScriptName&"|"&$sFunc&"]: "&$sStr
+    If FileExists($sPath) Then
+        If FileGetSize($sPath)>=1024*1024 Then
+            FileDelete($sPath)
+        EndIf
+    EndIf
 	If @Compiled And Not $g_iLogConsole Then
-		If Not FileWriteLine($sLogPath,$sErr) Then
-            MsgBox(16,"Error", "Cannot write to log"&@LF&$sLogPath&@LF&"Exiting.")
+		If Not FileWriteLine($sPath,$sErr) Then
+            MsgBox(16,"Error", "Cannot write to log"&@LF&$sPath&@LF&"Exiting.")
             Exit 0
         EndIf
     Else
@@ -786,9 +792,9 @@ EndFunc
 
 Func _Update($bPost=0)
     Local $sTitle=$sAlias&" Update"
-    _Log("Current Version: "&$VERSION,"_Update")
+    _UpdateLog("Current Version: "&$VERSION,"_Update")
     If $bPost Then
-        _Log("################### Update Stage 2 ###################","_Update")
+        _UpdateLog("################### Update Stage 2 ###################","_Update")
         ; I don't trust this, we should create a dir .\Snap\xx.xx.xx.xx.exe, then hardlink to .\Init.NAPS2.exe
         ; Get Version of main exec.
         $sBaseSnap=$sBaseDir&"\Init.NAPS2.exe"
@@ -800,13 +806,13 @@ Func _Update($bPost=0)
         Local $vCurVer=FileGetVersion($sBaseSnap)
         If @error Then
             MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-            _Log("Error: Could not retrieve FileVersion for Init.NAPS.exe","_Update")
+            _UpdateLog("Error: Could not retrieve FileVersion for Init.NAPS.exe","_Update")
             Return SetError(0,16,1)
         EndIf
         DirCreate($sSnapsDir)
         If Not _isDir($sSnapsDir) Then
             MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-            _Log("Error: Failed to create snaphot directory.","_Update")
+            _UpdateLog("Error: Failed to create snaphot directory.","_Update")
             Return SetError(0,17,1)
         EndIf
         $sCurSnap=$sSnapsDir&'\WrapNAPS2_v'&$vCurVer&".exe"
@@ -824,9 +830,9 @@ Func _Update($bPost=0)
         FileDelete($sBaseSnap)
         If Not FileCopy($sSnapsDir&'\WrapNAPS2_v'&$VERSION&".exe",$sBaseSnap,1) Then
             MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-            _Log("Error: Cannot copy update","_Update")
-             If FileCopy($sCurSnap,$sBaseSnap) Then _Log("Restored original Init.NAPS2.exe","_Update")
-            _Log("Copy "&$sSnapsDir&'\WrapNAPS2_v'&$VERSION&".exe over Init.NAPS2.exe to manually update.","_Update")
+            _UpdateLog("Error: Cannot copy update","_Update")
+             If FileCopy($sCurSnap,$sBaseSnap) Then _UpdateLog("Restored original Init.NAPS2.exe","_Update")
+            _UpdateLog("Copy "&$sSnapsDir&'\WrapNAPS2_v'&$VERSION&".exe over Init.NAPS2.exe to manually update.","_Update")
             If Not FileExists($sBaseSnap) Then
                 MsgBox(16,$sTitle,"Error: Cannot recover from update failure. Please contact your system administrator/developer.")
                 Exit 1
@@ -844,76 +850,76 @@ Func _Update($bPost=0)
         Return SetError(0,2,1)
     EndIf
     If Not $bCheckUpdate Then
-        _Log("Update check disabled","_Update")
+        _UpdateLog("Update check disabled","_Update")
         Return SetError(0,1,1)
     EndIf
-    _Log("Checking for updates.","_Update")
+    _UpdateLog("Checking for updates.","_Update")
     Local $iRet,$sRet
     $sRet=__Update_SecureGet("raw.githubusercontent.com","/BiatuAutMiahn/WrapNAPS/main/VERSION")
     If @error Then
         $iRet=@Extended
         Switch $iRet
             Case 1
-                _Log("Error initializeing WinHttp","_Update")
+                _UpdateLog("Error initializeing WinHttp","_Update")
             Case 2
-                _Log("Error connecting to Update Server.","_Update")
+                _UpdateLog("Error connecting to Update Server.","_Update")
             Case 3
-                _Log("Error creating update request","_Update")
+                _UpdateLog("Error creating update request","_Update")
             Case 4
-                _Log("Error sending update request","_Update")
+                _UpdateLog("Error sending update request","_Update")
             Case 5
-                _Log("Error recieveing update request response","_Update")
+                _UpdateLog("Error recieveing update request response","_Update")
             Case 6
-                _Log("Error while recieving update data","_Update")
+                _UpdateLog("Error while recieving update data","_Update")
         EndSwitch
         Return SetError(1,$iRet,0)
     EndIf
     $sRet=StringStripWS(BinaryToString($sRet),7)
-    _Log("Server Returned: "&$sRet,"_Update")
+    _UpdateLog("Server Returned: "&$sRet,"_Update")
     If $sRet="404: Not Found" Then
-        _Log("Error: Recieved HTTP Error 404 while checking for update","_Update")
+        _UpdateLog("Error: Recieved HTTP Error 404 while checking for update","_Update")
         Return SetError(1,7,0)
     EndIf
     Local $vVer=_VersionCompare($VERSION,$sRet)
     If @error Then
-        _Log("Error during update version comparison."&$sRet,"_Update")
+        _UpdateLog("Error during update version comparison."&$sRet,"_Update")
         Return SetError(1,8,0)
     EndIf
-    _Log("Upstream Version: "&$sRet,"_Update")
+    _UpdateLog("Upstream Version: "&$sRet,"_Update")
     If $vVer=0 Then
-        _Log("Up to date!","_Update")
+        _UpdateLog("Up to date!","_Update")
         Return SetError(0,3,1); No update available.
     EndIf
     If $vVer=1 Then
-        _Log("Warning: upstream version is older than self.","_Update")
+        _UpdateLog("Warning: upstream version is older than self.","_Update")
         Return SetError(1,9,0); We are newer than upstream
     EndIf
     If $vVer<>-1 Then
-        _Log("Error, unexpected update variable! ("&$vVer&')',"_Update")
+        _UpdateLog("Error, unexpected update variable! ("&$vVer&')',"_Update")
         Return SetError(1,10,0); _VersionCompare returned undocumented result.
     EndIf
     ; Prompt user for update.
     Local $iRet=MsgBox(32+4+65536,$sTitle,"An update is available!"&@LF&@LF&"Current version: "&$VERSION&@LF&"New version: "&$sRet&@LF&@LF&"Would you like to update now?",0,$hMain)
     If $iRet<>6 Then Return SetError(0,4,1)
     ; Download new version
-    _Log("Downloading new version...","_Update")
+    _UpdateLog("Downloading new version...","_Update")
     AdlibRegister("__UpdateProgWatch",10)
     $vUpdate=__Update_SecureGet("raw.githubusercontent.com","/BiatuAutMiahn/WrapNAPS/main/Init.NAPS2.exe","__UpdateProgCallback")
     If @error Then
         $iRet=@Extended
         Switch $iRet
             Case 1
-                _Log("Error initializeing WinHttp","_Update")
+                _UpdateLog("Error initializeing WinHttp","_Update")
             Case 2
-                _Log("Error connecting to Update Server.","_Update")
+                _UpdateLog("Error connecting to Update Server.","_Update")
             Case 3
-                _Log("Error creating update request","_Update")
+                _UpdateLog("Error creating update request","_Update")
             Case 4
-                _Log("Error sending update request","_Update")
+                _UpdateLog("Error sending update request","_Update")
             Case 5
-                _Log("Error recieveing update request response","_Update")
+                _UpdateLog("Error recieveing update request response","_Update")
             Case 6
-                _Log("Error while recieving update data","_Update")
+                _UpdateLog("Error while recieving update data","_Update")
         EndSwitch
         AdlibUnregister("__UpdateProgWatch")
         MsgBox(16,$sTitle,"Error: Failed to download update. See log for details.")
@@ -923,7 +929,7 @@ Func _Update($bPost=0)
     DirCreate($sSnapsDir)
     If Not _isDir($sSnapsDir) Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log("Error: Failed to create snaphot directory.","_Update")
+        _UpdateLog("Error: Failed to create snaphot directory.","_Update")
         Return SetError(0,13,1)
     EndIf
     ;If @error Then MsgBox(64,"Meh",@Error)
@@ -931,35 +937,39 @@ Func _Update($bPost=0)
     $hFile=FileOpen($sUpdate,2+8+16)
     If $hFile=-1 Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log('Error: Failed create file: "'&$sUpdate&'"',"_Update")
+        _UpdateLog('Error: Failed create file: "'&$sUpdate&'"',"_Update")
         Return SetError(0,14,1)
     EndIf
     If Not FileWrite($hFile,BinaryToString($vUpdate)) Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log('Error: Cannot write to file: "'&$sUpdate&'"',"_Update")
+        _UpdateLog('Error: Cannot write to file: "'&$sUpdate&'"',"_Update")
         Return SetError(0,14,1)
     EndIf
     FileClose($hFile)
     Local $vUpdVer=FileGetVersion($sUpdate)
     If @error Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log("Error: Could not retrieve FileVersion for '"&$sUpdate&"'","_Update")
+        _UpdateLog("Error: Could not retrieve FileVersion for '"&$sUpdate&"'","_Update")
         Return SetError(0,12,1)
     EndIf
     $vUpdVerCmp=_VersionCompare($vUpdVer,$sRet)
     If @error Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log("Error during update version comparison."&$sRet,"_Update")
+        _UpdateLog("Error during update version comparison."&$sRet,"_Update")
         Return SetError(1,13,0)
     EndIf
     If $vUpdVerCmp<>0 Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$sRet&')',"_Update")
+        _UpdateLog("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$sRet&')',"_Update")
         Return SetError(1,14,0)
     EndIf
-    _Log("Upstream Version: "&$sRet,"_Update")
+    _UpdateLog("Upstream Version: "&$sRet)
     Run($sUpdate&" ~!Update",$sBaseDir,@SW_SHOW)
     Exit 0
+EndFunc
+
+Func _UpdateLog($sStr,$sMod="_Update")
+    _Log($sStr,$sMod,$sBaseDir&"\logs\"&$sAlias&".Update.log")
 EndFunc
 
 Func __UpdateProgCallback($iStatus,$iBytes,$iTotal)
@@ -1044,5 +1054,5 @@ Func __WINHTTP_STATUS_CALLBACK($hInternet, $iContext, $iInternetStatus, $pStatus
         ;    $sStatus = "Data was successfully written to the server."
     EndSwitch
     ; Print it
-    If $sStatus<>'' Then _Log($sStatus,"__Update_SecureGet")
+    If $sStatus<>'' Then _UpdateLog($sStatus,"__Update_SecureGet")
 EndFunc    ;==>__WINHTTP_STATUS_CALLBACK
