@@ -56,29 +56,20 @@ If _WinAPI_GetVersion()<10 Then
     Exit 1
 EndIf
 
-Global $bInstall,$bStay,$bRemember
+Global $bInstall,$bStay,$bRemember=1
 Global $iScanner,$iScanSrc
 Global $sRegKey="HKCU\Software\InfinitySys\Apps\WrapNAPS"
 Global $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
-Global $sSaveDir="Documents\Scans"
-Global $sOneDrivePath=@UserProfileDir&"\OneDrive_"; redacted CPNI
-Global $sDestPath=$sOneDrivePath&'\'&$sSaveDir
+Global $sInitialSaveDir=@UserProfileDir&"\Documents"
+;Global $sOneDrivePath=@UserProfileDir&"\OneDrive"; redacted CPNI
+Global $sDestPath;=$sOneDrivePath&'\'&$sSaveDir
 Global $aScanners[1][3]
-
-; Update Stuff
-Global $bCheckUpdate=True
-Global $g_iProgPerc, $g_iProgBytes, $g_iProgTotal, $g_iUpdateStat
-; Register Callback function
-Global $hWINHTTP_STATUS_CALLBACK = DllCallbackRegister("__WINHTTP_STATUS_CALLBACK", "none", "handle;dword_ptr;dword;ptr;dword")
-
 $aScanners[0][0]=0
 
-Global $sNoOdWarn="The Lasting Change OneDrive folder cannot be found. OneDrive may not setup properly."&@LF
-$sNoOdWarn&="Choose one of the following options below:"&@LF&@LF
-$sNoOdWarn&="[Cancel]   : Abort the installation."&@LF
-$sNoOdWarn&="[Try Again]: Check Again. (After logging into OneDrive)"&@LF
-$sNoOdWarn&="[Continue] : Choose a destination folder for scans."&@LF&@LF
-$sNoOdWarn&="NOTE: We are not responsible for data loss as a result of not storing data in a reliable location such as OneDrive."&@LF
+; Update Variables
+Global $bCheckUpdate=True
+Global $g_iProgPerc, $g_iProgBytes, $g_iProgTotal, $g_iUpdateStat
+Global $hWINHTTP_STATUS_CALLBACK = DllCallbackRegister("__WINHTTP_STATUS_CALLBACK", "none", "handle;dword_ptr;dword;ptr;dword")
 
 Global $sMsgPostInstall='Success! A shortcut named "Scan to PDF" has been added to your desktop.'&@LF&@LF
 $sMsgPostInstall&="NOTE: Scans will be stored in:"&@LF
@@ -126,47 +117,13 @@ If $CmdLine[0]<>0 Then
         $sTitle=$sAlias&" Installer v"&$VERSION
         Local $iRet
         Local $sNewPath
-        Local $bAdmin=True;_IsUACAdmin()
-        If Not $bAdmin Then
-            $iRet=MsgBox(48+4,$sTitle,"Elevated permissions required for installation, would you like to attempt to elevate now?")
-            If $iRet<>6 Then Exit 2
-            Local $iPid
-            If @Compiled Then
-                $iPid=ShellExecute(@ScriptFullPath, "~!Install", @WorkingDir, "runas")
-            Else
-                $iPid=ShellExecute(@AutoItExe, '/AutoIt3ExecuteScript "' & @ScriptFullPath & '" ~!Install', @WorkingDir, "runas")
-            EndIf
-            $hProc=_WinAPI_OpenProcess($PROCESS_QUERY_INFORMATION, 0, $iPid)
-            While ProcessExists($iPid)
-                Sleep(125)
-            WEnd
-            Exit _WinAPI_GetExitCodeProcess($hProc)
-        EndIf
-        While Not _isDir($sOneDrivePath)
-            $iRet=MsgBox(48+6,$sTitle,$sNoOdWarn)
-            ConsoleWrite($iRet&@CRLF)
-            Switch $iRet
-                Case 2; Abort
-                    Exit 2
-                Case 11; Continue
-                    While 1
-                        $sNewPath=FileSelectFolder($sTitle&" - Choose Scan Folder",@UserProfileDir,7)
-                        If $sNewPath<>'' Then ExitLoop
-                        $iRet=MsgBox(48+4,$sTitle,"No directory was selected, do you want to abort the installation?")
-                        If $iRet==6 Then Exit 2
-                    WEnd
-                    If $sNewPath<>'' Then ExitLoop
-            EndSwitch
-        WEnd
-        If $sNewPath<>'' Then
-            $sDestPath=$sNewPath
-        EndIf
+        $sDestPath=FileSelectFolder($sTitle&" - Choose Scan Folder",$sInitialSaveDir,7)
         $iRet=RegWrite($sRegKey,"ScanPath","REG_SZ",$sDestPath)
         If $iRet<>1  Then
             MsgBox(16,"","Failed to update registry! (Error: "&$iRet&')'&@LF&"Exiting.")
             Exit 1
         EndIf
-        If FileCreateShortcut($sBaseDir&"\Init.NAPS2.exe",@DesktopDir&"\Scan to PDF.lnk",@ScriptDir)<>1 Then
+        If FileCreateShortcut($sBaseDir&"\Init.NAPS2.exe",@DesktopDir&"\Scan to PDF.lnk",$sBaseDir)<>1 Then
             MsgBox(16,"","Failed to create desktop shortcut! Exiting.")
             Exit 1
         EndIf
@@ -178,7 +135,12 @@ EndIf
 
 $sDestPath=RegRead($sRegKey,"ScanPath")
 If @error Then
-    MsgBox(16,$sTitle,"Please reinstall, ScanPath not configured.")
+    $sDestPath=FileSelectFolder($sTitle&" - Choose Scan Folder",$sInitialSaveDir,7)
+    $iRet=RegWrite($sRegKey,"ScanPath","REG_SZ",$sDestPath)
+    If $iRet<>1  Then
+        MsgBox(16,"","Failed to update registry! (Error: "&$iRet&')'&@LF&"Exiting.")
+        Exit 1
+    EndIf
     Exit 1
 EndIf
 
@@ -246,7 +208,7 @@ While 1
             If Not $bStay Then _Exit(0)
         Case $idBtnScan
             $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
-            _GenProfile()
+            _UpdProfile()
             $sProfile=''
             Switch $iScanSrc
                 Case 0x1
@@ -275,10 +237,7 @@ While 1
                 Sleep(10)
             Until Not ProcessExists($iPid)
             If $sOutput<>'' Then
-                $hLog=FileOpen($sBaseDir&"\LastScan.log",2)
-                FileWrite($hLog,$sOutput)
-                FileClose($hLog)
-                ConsoleWrite('"""'&$sOutput&'"""'&@CRLF)
+                _Log("NAPS2.Console:"&@LF&$sOutput)
                 For $iIdx=0 To UBound($aErrMsgs,1)-1
                     If StringInStr($sOutput,$aErrMsgs[$iIdx]) Then
                         ToolTip("Scanning...Failed",$aPos[0]+10,$aPos[1]+10)
@@ -293,14 +252,10 @@ While 1
             Sleep(500)
             ToolTip('')
             If Not $bStay Then _Exit(0)
-            ;-p Auto --output "'&@UserProfileDir&'\Documents\Scans\'&$sDest&'"  --progress',@ScriptDir)
 	EndSwitch
 WEnd
-;~ If BitAND($iScanSrc,0x1) Then GUICtrlSetState($idRadFlat,$GUI_CHECKED)
-;~             If BitAND($iScanSrc,0x2) Then GUICtrlSetState($idRadFeed,$GUI_CHECKED)
-;~             If BitAND($iScanSrc,0x4) Then GUICtrlSetState($idRadDplx,$GUI_CHECKED)
-; # Functions ======================================================================================================================
 
+; # Functions ======================================================================================================================
 Func _Exit($iCode)
     _savePrefs()
     Exit $iCode
@@ -354,7 +309,6 @@ Func _udpScanners()
             GUICtrlSetState($idRadFeed,(BitAND($aScanners[$iScanner][2],0x2)?$GUI_ENABLE:$GUI_DISABLE))
             GUICtrlSetState($idRadDplx,(BitAND($aScanners[$iScanner][2],0x4)?$GUI_ENABLE:$GUI_DISABLE))
             If $sLastScanner<>-1 Then
-                ConsoleWrite($iScanner&@CRLF)
                 $iScanSrc=RegRead($sRegKey&"\DocSources",$aScanners[$iScanner][1])
                 If BitAND($iScanSrc,0x1) Then GUICtrlSetState($idRadFlat,$GUI_CHECKED)
                 If BitAND($iScanSrc,0x2) Then GUICtrlSetState($idRadFeed,$GUI_CHECKED)
@@ -380,91 +334,6 @@ Func _isDir($sPath)
     If Not StringInStr(FileGetAttrib($sPath),'d') Then Return SetError(1,1,0)
     Return SetError(0,0,1)
 EndFunc
-
-; #FUNCTION# ====================================================================================================================
-; Name ..........: _IsUACAdmin
-; Description ...: Determines if process has Admin privileges and whether running under UAC.
-; Syntax ........: _IsUACAdmin()
-; Parameters ....: None
-; Return values .: Success          - 1 - User has full Admin rights (Elevated Admin w/ UAC)
-;                  Failure          - 0 - User is not an Admin, sets @extended:
-;                                   | 0 - User cannot elevate
-;                                   | 1 - User can elevate
-; Author ........: Erik Pilsits
-; Modified ......:
-; Remarks .......: THE GOOD STUFF: returns 0 w/ @extended = 1 > UAC Protected Admin
-; Related .......:
-; Link ..........:
-; Example .......: No
-; ===============================================================================================================================
-Func _IsUACAdmin()
-    ; check elevation
-    If StringRegExp(@OSVersion, "_(XP|20(0|3))") Or (Not _IsUACEnabled()) Then ; XP, XPe, 2000, 2003 > no UAC
-        ; no UAC available or turned off
-        If IsAdmin() Then
-            Return SetExtended(0, 1)
-        Else
-            Return SetExtended(0, 0)
-        EndIf
-    Else
-        ; check UAC elevation
-        ;
-        ; get process token groups information
-        Local $hToken = _Security__OpenProcessToken(_WinAPI_GetCurrentProcess(), $TOKEN_QUERY)
-        Local $tTI = _Security__GetTokenInformation($hToken, $TOKENGROUPS)
-        _WinAPI_CloseHandle($hToken)
-        ;
-        Local $pTI = DllStructGetPtr($tTI)
-        Local $cbSIDATTR = DllStructGetSize(DllStructCreate("ptr;dword"))
-        Local $count = DllStructGetData(DllStructCreate("dword", $pTI), 1)
-        Local $pGROUP1 = DllStructGetPtr(DllStructCreate("dword;STRUCT;ptr;dword;ENDSTRUCT", $pTI), 2)
-        Local $tGROUP, $sGROUP = ""
-        ;
-        ; S-1-5-32-544 > BUILTINAdministrators > $SID_ADMINISTRATORS
-        ; S-1-16-8192  > Mandatory LabelMedium Mandatory Level (Protected Admin) > $SID_MEDIUM_MANDATORY_LEVEL
-        ; S-1-16-12288 > Mandatory LabelHigh Mandatory Level (Elevated Admin) > $SID_HIGH_MANDATORY_LEVEL
-        ; SE_GROUP_USE_FOR_DENY_ONLY = 0x10
-        ;
-        ; check SIDs
-        Local $inAdminGrp = False, $denyAdmin = False, $elevatedAdmin = False, $sSID
-        For $i = 0 To $count - 1
-            $tGROUP = DllStructCreate("ptr;dword", $pGROUP1 + ($cbSIDATTR * $i))
-            $sSID = _Security__SidToStringSid(DllStructGetData($tGROUP, 1))
-            If StringInStr($sSID, "S-1-5-32-544") Then
-                ; member of Administrators group
-                $inAdminGrp = True
-                ; check for deny attribute
-                If (BitAND(DllStructGetData($tGROUP, 2), 0x10) = 0x10) Then $denyAdmin = True
-            ElseIf StringInStr($sSID, "S-1-16-12288") Then
-                $elevatedAdmin = True
-            EndIf
-        Next
-        ;
-        If $inAdminGrp Then
-            ; check elevated
-            If $elevatedAdmin Then
-                ; check deny status
-                If $denyAdmin Then
-                    ; protected Admin CANNOT elevate
-                    Return SetExtended(0, 0)
-                Else
-                    ; elevated Admin
-                    Return SetExtended(1, 1)
-                EndIf
-            Else
-                ; protected Admin
-                Return SetExtended(1, 0)
-            EndIf
-        Else
-            ; not an Admin
-            Return SetExtended(0, 0)
-        EndIf
-    EndIf
-EndFunc   ;==>_IsUACAdmin
-
-Func _IsUACEnabled()
-    Return (RegRead("HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System", "EnableLUA") = 1)
-EndFunc   ;==>_IsUACEnabled
 
 Func getScanners()
     Local $oWia=ObjCreate("WIA.DeviceManager")
@@ -512,22 +381,22 @@ Func WM_COMMAND($hWnd, $iMsg, $wParam, $lParam)
             Switch $iId
                 Case $idRadFlat
                     If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iScanSrc=0x1
-                    ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
+                    ;ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
                     If $iScanner<>-1 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
                 Case $idRadFeed
                     If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iScanSrc=0x2
-                    ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
+                    ;ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
                     If $iScanner<>-1 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
                 Case $idRadDplx
                     If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iScanSrc=0x4
-                    ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
+                    ;ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
                     If $iScanner<>-1 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
                 Case $idChkRemb
                     $bRemember=BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED
-                    ConsoleWrite("Remb:"&$bRemember&@CRLF)
+                    ;ConsoleWrite("Remb:"&$bRemember&@CRLF)
                 Case $idChkStay
                     $bStay=BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED
-                    ConsoleWrite("Stay:"&$bStay&@CRLF)
+                    ;ConsoleWrite("Stay:"&$bStay&@CRLF)
             EndSwitch
     EndSwitch
     Return $GUI_RUNDEFMSG
@@ -556,24 +425,220 @@ Func _Base64Decode($sInput)
     Return DllStructGetData($tData,1)
 EndFunc   ;==>_Base64Decode
 
-Func _GenProfile()
-    If $iScanner=-1 Then Return
-    $sProfiles=$sBaseDir&"\Data\Profiles.xml"
-    Local $aProfiles
-    _FileReadToArray($sProfiles,$aProfiles)
-    ;_ArrayDIsplay($aProfiles)
-    For $i=0 To UBound($aProfiles,1)-1
-        If StringRegExp($aProfiles[$i],"<ID>[^\<]*</ID>") Then
-            ConsoleWrite($aScanners[$iScanner][1]&@CRLF)
-            $aProfiles[$i]="        <ID>"&$aScanners[$iScanner][1]&"</ID>"
+;~ Func _GenProfile()
+;~     If $iScanner=-1 Then Return
+;~     $sProfiles=$sBaseDir&"\Data\Profiles.xml"
+;~     Local $aProfiles
+;~     _FileReadToArray($sProfiles,$aProfiles)
+;~     ;_ArrayDIsplay($aProfiles)
+;~     For $i=0 To UBound($aProfiles,1)-1
+;~         If StringRegExp($aProfiles[$i],"<ID>[^\<]*</ID>") Then
+;~             ConsoleWrite($aScanners[$iScanner][1]&@CRLF)
+;~             $aProfiles[$i]="        <ID>"&$aScanners[$iScanner][1]&"</ID>"
+;~         EndIf
+;~         If StringRegExp($aProfiles[$i],"<Name>[^\<]*</Name>") Then
+;~             $aProfiles[$i]="        <Name>"&$aScanners[$iScanner][0]&"</Name>"
+;~         EndIf
+;~     Next
+;~     ;_ArrayDIsplay($aProfiles)
+;~     _FileWriteFromArray($sProfiles,$aProfiles,1)
+;~ EndFunc
+
+Func _UpdProfile()
+    Local $bWNPF
+    Local $bWNPD
+    Local $bWNPG
+    Local $sNewProfile
+    Local $sProfilePath="Profiles.xml"
+    Local $bExists=FileExists($sProfilePath)
+    Local $hFile
+    ;FileSetPos($hFile,0)
+    If $bExists Then
+        $bWNPF=0
+        $bWNPD=0
+        $bWNPG=0
+        $hFile=FileOpen($sProfilePath,0)
+        If $hFile=-1 And $bExists Then
+            _Log("Error: '"&$sProfilePath&"' exists, but cannot be opened for reading.")
+            _MsgNoProfUpdate()
+            Return SetError(1,1,0)
         EndIf
-        If StringRegExp($aProfiles[$i],"<Name>[^\<]*</Name>") Then
-            $aProfiles[$i]="        <Name>"&$aScanners[$iScanner][0]&"</Name>"
+        _Log("Info: Reading NAPS2 Profiles.")
+        Local $sData=FileRead($hFile)
+        FileClose($hFile)
+        Local $aProfiles=StringRegExp($sData,"<ScanProfile>((?:.|\s)*?)<\/ScanProfile>",3); Returns array of ScanProfile(s)
+        If Not @error Then
+            For $sProfile In $aProfiles
+                $sDisplayName=_XmlGetField($sProfile,"DisplayName")
+                ; This profile is nameless, skip.
+                If @error Or $sDisplayName='' Then
+                    _Log("Warning: Skipping the '"&$sDisplayName&"' profile, it doesn't have a name.")
+                    ContinueLoop
+                EndIf
+                ; If this profile isn't intended for us, ignore it. We dont to modify profiles we don't need.
+                If Not StringInStr($sAlias&"_Feeder"&$sAlias&"_Duplex"&$sAlias&"_Glass",$sDisplayName) Then ContinueLoop
+                ; Replace the Device ID, and Device Name in the Profile.
+                $sNewProfile=$sProfile
+                $sId=_XmlGetField($sNewProfile,"ID")
+                If Not @Error Then
+                    $sNewProfile=StringReplace($sNewProfile,"<ID>"&$sId&"</ID>","<ID>"&$aScanners[$iScanner][1]&"</ID>")
+                    If Not @extended Then
+                        _Log("Error: Couldn't update NAPS2 profile's Device ID property. ('<ID>"&$sId&"</ID>' -> '<ID>"&$aScanners[$iScanner][1]&"</ID>')","_UpdProfile")
+                        _MsgNoProfUpdate()
+                        Return SetError(1,2,0)
+                    EndIf
+                Else
+                    _Log("Error: NAPS2 profile does not contain a Device ID property.","_UpdProfile")
+                    _MsgNoProfUpdate()
+                    Return SetError(1,3,0)
+                EndIf
+                $sName=_XmlGetField($sNewProfile,"Name")
+                If Not @Error Then
+                    $sNewProfile=StringReplace($sNewProfile,"<Name>"&$sName&"</Name>","<Name>"&$aScanners[$iScanner][0]&"</Name>")
+                    If Not @extended Then
+                        _Log("Error: Couldn't update NAPS2 profile's Device Name property. ('<Name>"&$sName&"</Name>' -> '<Name>"&$aScanners[$iScanner][0]&"</Name>')","_UpdProfile")
+                        _MsgNoProfUpdate()
+                        Return SetError(1,4,0)
+                    EndIf
+                Else
+                    _Log("Error: NAPS2 profile does not contain a Device Name property.","_UpdProfile")
+                    _MsgNoProfUpdate()
+                    Return SetError(1,5,0)
+                EndIf
+                ; Replace profile in xml.
+                $sData=StringReplace($sData,$sProfile,$sNewProfile)
+                If Not @extended Then
+                    _Log("Error: Couldn't replace old profile string.","_UpdProfile")
+                    _MsgNoProfUpdate()
+                    Return SetError(1,6,0)
+                EndIf
+                Switch $sDisplayName
+                    Case $sAlias&"_Feeder"
+                        $bWNPF=1
+                    Case $sAlias&"_Duplex"
+                        $bWNPD=1
+                    Case $sAlias&"_Glass"
+                        $bWNPG=1
+                EndSwitch
+            Next
+        Else
+            _Log("Warning: No NAPS2 Profiles Exist.")
         EndIf
-    Next
-    ;_ArrayDIsplay($aProfiles)
-    _FileWriteFromArray($sProfiles,$aProfiles,1)
+        If Not $bWNPF Or Not $bWNPD Or Not $bWNPG Then
+            Local $sProfiles=''
+            If Not $bWNPF Then
+                _Log("Warning: The "&$sAlias&"_Feeder profile was not found, adding.")
+                $sProfiles&=_GenProfile(0)
+            EndIf
+            If Not $bWNPD Then
+                _Log("Warning: The "&$sAlias&"_Duplex profile was not found, adding.")
+                $sProfiles&=_GenProfile(1)
+            EndIf
+            If Not $bWNPG Then
+                _Log("Warning: The "&$sAlias&"_Glass profile was not found, adding.")
+                $sProfiles&=_GenProfile(2)
+            EndIf
+            ;ConsoleWrite($sProfiles&@CRLF)
+            $sData=StringReplace($sData,"</ArrayOfScanProfile>",$sProfiles&"</ArrayOfScanProfile>")
+            If Not @extended Then
+                _Log("Error: Couldn't append missing NAPS2 profiles.","_UpdProfile")
+                _MsgNoProfUpdate()
+                Return SetError(1,8,0)
+            EndIf
+        EndIf
+        Local $bBackup=1
+        If Not FileCopy($sProfilePath,$sProfilePath&".bak",1) Then
+            $bBackup=0
+            _Log("Warning: Cannot create a backup copy of '"&$sProfilePath&"'")
+        EndIf
+        $hFile=FileOpen($sProfilePath,2)
+        If $hFile=-1 Then
+            _Log("Error: '"&$sProfilePath&"' cannot be opened for writing.")
+            If $bBackup Then
+                If Not FileDelete($sProfilePath) Then
+                    _Log("Warning: Cannot restore backup, cannot delete '"&$sProfilePath&"'")
+                EndIf
+                If Not FileCopy($sProfilePath&".bak",$sProfilePath,1) Then
+                    _Log("Warning: Cannot restore backup, cannot overwrite '"&$sProfilePath&"'")
+                EndIf
+                If Not FileDelete($sProfilePath&".bak") Then
+                    _Log("Warning: Cannot delete backup copy.")
+                EndIf
+            EndIf
+            _MsgNoProfUpdate()
+            Return SetError(1,9,0)
+        EndIf
+        If Not FileWrite($hFile,$sData) Then
+            _Log("Error: Couldn't write NAPS2 Profiles.xml","_UpdProfile")
+            Return SetError(1,10,0)
+        EndIf
+    Else
+        ; Profiles.xml does not exist, creating default.
+        $hFile=FileOpen($sProfilePath,2)
+        If $hFile=-1 Then
+            If $bExists Then
+                _Log("Error: '"&$sProfilePath&"' exists, but cannot be opened for writing.")
+            Else
+                _Log("Error: '"&$sProfilePath&"' cannot be opened for writing.")
+            EndIf
+            _MsgNoProfUpdate()
+            Return SetError(1,1,0)
+        EndIf
+        Local $sData='<?xml version="1.0" encoding="utf-8"?>'&@CRLF
+        $sData&='<ArrayOfScanProfile>'&@CRLF
+        For $i=0 To 2
+            $sData&=_GenProfile($i)
+        Next
+        $sData&='</ArrayOfScanProfile>'&@CRLF
+        FileWrite($hFile,$sData)
+        FileClose($hFile)
+    EndIf
+    Return SetError(0,0,1)
 EndFunc
+
+Func _GenProfile($iType)
+    Local $sData
+    Local $aIntFields=StringSplit("Version|IconID|Brightness|Contrast|Quality|BlankPageWhiteThreshold|BlankPageCoverageThreshold|WiaDelayBetweenScansSeconds",'|')
+    Local $aIntData=StringSplit("2|0|0|0|75|70|25|2",'|')
+    Local $aBoolFields=StringSplit("MaxQuality|IsDefault|UseNativeUI|AfterScanScale|EnableAutoSave|AutoDeskew|BrightnessContrastAfterScan|ForcePageSize|ForcePageSizeCrop|ExcludeBlankPages|WiaOffsetWidth|WiaRetryOnFailure|WiaDelayBetweenScans|FlipDuplexedPages",'|')
+    Local $aBoolData=StringSplit("0|0|0|0|0|0|0|0|0|0|0|0|2|0",'|')
+    Local $aStrFields=StringSplit("DriverName|AfterScanScale|BitDepth|PageAlign|PageSize|Resolution|TwainImpl|WiaVersion",'|')
+    Local $aStrData=StringSplit("wia|OneToOne|C24Bit|Right|Letter|Dpi300|Default|Default",'|')
+    Local $aTmplFields=StringSplit("CustomPageSizeName|CustomPageSize|AutoSaveSettings|KeyValueOptions",'|')
+    Local $aType[]=["Feeder","Duplex","Glass"]
+    $sData="  <ScanProfile>"&@CRLF
+    For $j=1 To $aIntFields[0]
+        $sData&="    <"&$aIntFields[$j]&'>'&$aIntData[$j]&"</"&$aIntFields[$j]&'>'&@CRLF
+    Next
+    For $j=1 To $aBoolFields[0]
+        $sData&="    <"&$aBoolFields[$j]&'>'&($aBoolData[$j]==1?"true":"false")&"</"&$aBoolFields[$j]&'>'&@CRLF
+    Next
+    For $j=1 To $aStrFields[0]
+        $sData&="    <"&$aStrFields[$j]&'>'&$aStrData[$j]&"</"&$aStrFields[$j]&'>'&@CRLF
+    Next
+    For $j=1 To $aTmplFields[0]
+        $sData&="    <"&$aTmplFields[$j]&' p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />'&@CRLF
+    Next
+    $sData&="    <PaperSource>"&$aType[$iType]&"</PaperSource>"&@CRLF
+    $sData&="    <DisplayName>"&$sAlias&'_'&$aType[$iType]&"</DisplayName>"&@CRLF
+    $sData&="    <Device>"&@CRLF
+    $sData&="      <ID>"&$aScanners[$iScanner][1]&"</ID>"&@CRLF
+    $sData&="      <Name>"&$aScanners[$iScanner][0]&"</Name>"&@CRLF
+    $sData&="    </Device>"&@CRLF
+    $sData&="  </ScanProfile>"&@CRLF
+    Return $sData
+EndFunc
+
+Func _XmlGetField(ByRef $sXml,$sField)
+    $sRet=StringRegExp($sXml,'<'&$sField&">([^<]*?)<\/"&$sField&'>',1)
+    If @Error Then Return SetError(1,1,0)
+    Return SetError(0,0,$sRet[0])
+EndFunc
+
+Func _MsgNoProfUpdate()
+    MsgBox(16,$sTitle,"Error: Could not update NAPS2 profiles.xml. Please contact your system administrator or see log for details.")
+EndFunc
+
 
 Func _COMErrorReset()
     $g_iCOMError=0
@@ -806,12 +871,7 @@ Func _Update($bPost=0)
         _Log("Error: Recieved HTTP Error 404 while checking for update","_Update")
         Return SetError(1,7,0)
     EndIf
-    ConsoleWrite($VERSION&@CRLF)
-    ConsoleWrite($sRet&@CRLF)
-    ConsoleWrite(StringToBinary($VERSION)&@CRLF)
-    ConsoleWrite(StringToBinary($sRet)&@CRLF)
     Local $vVer=_VersionCompare($VERSION,$sRet)
-    ConsoleWrite($vVer&@CRLF)
     If @error Then
         _Log("Error during update version comparison."&$sRet,"_Update")
         Return SetError(1,8,0)
