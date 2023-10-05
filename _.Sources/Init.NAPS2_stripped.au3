@@ -520,18 +520,18 @@ EndFunc
 Func __WinHttpVer()
 Return "1.6.4.1"
 EndFunc
-Global Const $VERSION = "1.2310.513.2338"
+Global Const $VERSION = "1.2310.513.3750"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
+Global $sTitle=$sAlias&" v"&$VERSION
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
 If Not @Compiled Then $sBaseDir=@ScriptDir&"\.."
 Global $sSnapsDir=$sBaseDir&"\Snaps"
-Global $sLogPath=$sBaseDir&'\'&@ScriptName&".log"
+Global $sLogPath=$sBaseDir&'\'&$sTitle&".log"
 Global $bgNoLog=False, $g_iLogConsole = False
 Global $g_oCOMError, $g_oCOMErrorDef, $g_iCOMError=0, $g_iCOMErrorExt=0, $g_sCOMError="", $g_sCOMErrorFunc="", $g_bCOMErrorLog=True
 Global $g_oCOMErrorDef = ObjEvent("AutoIt.Error")
 Global $g_oCOMError = ObjEvent("AutoIt.Error", "_COMErrorFunc")
-Global $sTitle=$sAlias&" v"&$VERSION
 If _WinAPI_GetVersion()<10 Then
 MsgBox(16,$sTitle,"This program does support this version of windows!")
 Exit 1
@@ -1108,19 +1108,19 @@ $sBaseSnap=$sBaseDir&"\Init.NAPS2.exe"
 If Not FileExists($sBaseSnap) Then
 MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
 MsgBox(16,$sTitle,'Error: "Init.NAPS2.exe" could not be found. Update Failed.')
-Return SetError(0,11,1)
+Return SetError(0,15,1)
 EndIf
 Local $vCurVer=FileGetVersion($sBaseSnap)
 If @error Then
 MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
 _Log("Error: Could not retrieve FileVersion for Init.NAPS.exe","_Update")
-Return SetError(0,12,1)
+Return SetError(0,16,1)
 EndIf
 DirCreate($sSnapsDir)
 If Not _isDir($sSnapsDir) Then
 MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
 _Log("Error: Failed to create snaphot directory.","_Update")
-Return SetError(0,13,1)
+Return SetError(0,17,1)
 EndIf
 $sCurSnap=$sSnapsDir&'\WrapNAPS2_v'&$vCurVer&".exe"
 If Not FileExists($sCurSnap) Then
@@ -1234,6 +1234,24 @@ _Log('Error: Cannot write to file: "'&$sUpdate&'"',"_Update")
 Return SetError(0,14,1)
 EndIf
 FileClose($hFile)
+Local $vUpdVer=FileGetVersion($sUpdate)
+If @error Then
+MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
+_Log("Error: Could not retrieve FileVersion for '"&$sUpdate&"'","_Update")
+Return SetError(0,12,1)
+EndIf
+$vUpdVerCmp=_VersionCompare($vUpdVer,$vVer)
+If @error Then
+MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
+_Log("Error during update version comparison."&$sRet,"_Update")
+Return SetError(1,13,0)
+EndIf
+If $vUpdVerCmp<>0 Then
+MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
+_Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$vVer&')',"_Update")
+Return SetError(1,14,0)
+EndIf
+_Log("Upstream Version: "&$sRet,"_Update")
 Run($sUpdate&" ~!Update",$sBaseDir,@SW_SHOW)
 Exit 0
 EndFunc
