@@ -520,7 +520,7 @@ EndFunc
 Func __WinHttpVer()
 Return "1.6.4.1"
 EndFunc
-Global Const $VERSION = "1.2310.514.419"
+Global Const $VERSION = "1.2310.514.1853"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
@@ -1241,7 +1241,7 @@ MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
 _Log("Error: Could not retrieve FileVersion for '"&$sUpdate&"'","_Update")
 Return SetError(0,12,1)
 EndIf
-$vUpdVerCmp=_VersionCompare($vUpdVer,$vVer)
+$vUpdVerCmp=_VersionCompare($vUpdVer,$sRet)
 If @error Then
 MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
 _Log("Error during update version comparison."&$sRet,"_Update")
@@ -1249,7 +1249,7 @@ Return SetError(1,13,0)
 EndIf
 If $vUpdVerCmp<>0 Then
 MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-_Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$vVer&')',"_Update")
+_Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$sRet&')',"_Update")
 Return SetError(1,14,0)
 EndIf
 _Log("Upstream Version: "&$sRet,"_Update")

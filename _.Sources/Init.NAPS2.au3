@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.514.419
+#AutoIt3Wrapper_Res_Fileversion=1.2310.514.1853
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -39,7 +39,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.514.419"
+Global Const $VERSION = "1.2310.514.1853"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
@@ -946,7 +946,7 @@ Func _Update($bPost=0)
         _Log("Error: Could not retrieve FileVersion for '"&$sUpdate&"'","_Update")
         Return SetError(0,12,1)
     EndIf
-    $vUpdVerCmp=_VersionCompare($vUpdVer,$vVer)
+    $vUpdVerCmp=_VersionCompare($vUpdVer,$sRet)
     If @error Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
         _Log("Error during update version comparison."&$sRet,"_Update")
@@ -954,7 +954,7 @@ Func _Update($bPost=0)
     EndIf
     If $vUpdVerCmp<>0 Then
         MsgBox(16,$sTitle,"Error: Update Failed, see log for details.")
-        _Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$vVer&')',"_Update")
+        _Log("Error: The downloaded update version does not match the version reported. ("&$vUpdVerCmp&","&$vUpdVer&"<>"&$sRet&')',"_Update")
         Return SetError(1,14,0)
     EndIf
     _Log("Upstream Version: "&$sRet,"_Update")
