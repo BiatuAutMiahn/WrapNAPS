@@ -1,15 +1,16 @@
-#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
+﻿#Region ;**** Directives created by AutoIt3Wrapper_GUI ****
 #AutoIt3Wrapper_Icon=Res\Icon.ico
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.317.5559
-#AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
-#AutoIt3Wrapper_Res_Fileversion_AutoIncrement=y
-#AutoIt3Wrapper_Res_Fileversion_First_Increment=y
+#AutoIt3Wrapper_Res_Fileversion=1.2310.512.3154
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
+#AutoIt3Wrapper_Run_Au3Stripper=y
+#AutoIt3Wrapper_Res_Fileversion_First_Increment=y
+#AutoIt3Wrapper_Res_FileVersion_AutoIncrement=y
+#AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 #cs ----------------------------------------------------------------------------
@@ -18,6 +19,7 @@
  Author:         BiatuAutMiahn[@outlook.com]
 
 #ce ----------------------------------------------------------------------------
+
 #include <ProcessConstants.au3>
 #include <WinAPIProc.au3>
 #include <Security.au3>
@@ -37,7 +39,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.317.5559"
+Global Const $VERSION = "1.2310.512.3154"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
