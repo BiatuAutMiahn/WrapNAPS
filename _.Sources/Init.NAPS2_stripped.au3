@@ -520,7 +520,7 @@ EndFunc
 Func __WinHttpVer()
 Return "1.6.4.1"
 EndFunc
-Global Const $VERSION = "1.2310.513.1517"
+Global Const $VERSION = "1.2310.513.2338"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
