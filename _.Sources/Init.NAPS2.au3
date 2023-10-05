@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.513.451
+#AutoIt3Wrapper_Res_Fileversion=1.2310.513.1517
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -39,7 +39,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.513.451"
+Global Const $VERSION = "1.2310.513.1517"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
@@ -869,6 +869,7 @@ Func _Update($bPost=0)
         Return SetError(1,$iRet,0)
     EndIf
     $sRet=StringStripWS(BinaryToString($sRet),7)
+    _Log("Server Returned: "&$sRet,"_Update")
     If $sRet="404: Not Found" Then
         _Log("Error: Recieved HTTP Error 404 while checking for update","_Update")
         Return SetError(1,7,0)
@@ -1025,5 +1026,5 @@ Func __WINHTTP_STATUS_CALLBACK($hInternet, $iContext, $iInternetStatus, $pStatus
         ;    $sStatus = "Data was successfully written to the server."
     EndSwitch
     ; Print it
-    _Log($sStatus,"__Update_SecureGet")
+    If $sStatus<>'' Then _Log($sStatus,"__Update_SecureGet")
 EndFunc    ;==>__WINHTTP_STATUS_CALLBACK

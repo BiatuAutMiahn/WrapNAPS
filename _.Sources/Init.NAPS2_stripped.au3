@@ -520,7 +520,7 @@ EndFunc
 Func __WinHttpVer()
 Return "1.6.4.1"
 EndFunc
-Global Const $VERSION = "1.2310.513.451"
+Global Const $VERSION = "1.2310.513.1517"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
@@ -1166,6 +1166,7 @@ EndSwitch
 Return SetError(1,$iRet,0)
 EndIf
 $sRet=StringStripWS(BinaryToString($sRet),7)
+_Log("Server Returned: "&$sRet,"_Update")
 If $sRet="404: Not Found" Then
 _Log("Error: Recieved HTTP Error 404 while checking for update","_Update")
 Return SetError(1,7,0)
@@ -1269,5 +1270,5 @@ $sStatus = "An error occurred while sending an HTTP request."
 Case $WINHTTP_CALLBACK_STATUS_SECURE_FAILURE
 $sStatus = "One or more errors were encountered while retrieving a Secure Sockets Layer (SSL) certificate from the server."
 EndSwitch
-_Log($sStatus,"__Update_SecureGet")
+If $sStatus<>'' Then _Log($sStatus,"__Update_SecureGet")
 EndFunc
