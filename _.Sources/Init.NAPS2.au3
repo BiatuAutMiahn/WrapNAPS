@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.514.2852
+#AutoIt3Wrapper_Res_Fileversion=1.2310.514.3905
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -20,7 +20,7 @@
 
 #ce ----------------------------------------------------------------------------
 
-Global Const $VERSION = "1.2310.514.2852"
+Global Const $VERSION = "1.2310.514.3905"
 
 #include <ProcessConstants.au3>
 #include <WinAPIProc.au3>

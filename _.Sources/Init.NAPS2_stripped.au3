@@ -1,4 +1,4 @@
-﻿Global Const $VERSION = "1.2310.514.2852"
+﻿Global Const $VERSION = "1.2310.514.3905"
 Global Const $UBOUND_ROWS = 1
 Global Const $UBOUND_COLUMNS = 2
 Global Const $NUMBER_DOUBLE = 3
