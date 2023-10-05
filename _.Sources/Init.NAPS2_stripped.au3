@@ -269,27 +269,9 @@ Global Const $WINHTTP_DECOMPRESSION_FLAG_ALL = 0x00000003
 Global Const $WINHTTP_AUTOLOGON_SECURITY_LEVEL_MEDIUM = 0
 Global Const $WINHTTP_AUTOLOGON_SECURITY_LEVEL_LOW = 1
 Global Const $WINHTTP_AUTOLOGON_SECURITY_LEVEL_HIGH = 2
-Global Const $WINHTTP_CALLBACK_STATUS_RESOLVING_NAME = 0x00000001
-Global Const $WINHTTP_CALLBACK_STATUS_NAME_RESOLVED = 0x00000002
-Global Const $WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER = 0x00000004
-Global Const $WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER = 0x00000008
-Global Const $WINHTTP_CALLBACK_STATUS_SENDING_REQUEST = 0x00000010
-Global Const $WINHTTP_CALLBACK_STATUS_REQUEST_SENT = 0x00000020
-Global Const $WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE = 0x00000040
-Global Const $WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED = 0x00000080
-Global Const $WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION = 0x00000100
-Global Const $WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED = 0x00000200
-Global Const $WINHTTP_CALLBACK_STATUS_HANDLE_CREATED = 0x00000400
-Global Const $WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING = 0x00000800
-Global Const $WINHTTP_CALLBACK_STATUS_REDIRECT = 0x00004000
 Global Const $WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE = 0x00008000
 Global Const $WINHTTP_CALLBACK_STATUS_SECURE_FAILURE = 0x00010000
-Global Const $WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE = 0x00020000
-Global Const $WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE = 0x00040000
-Global Const $WINHTTP_CALLBACK_STATUS_READ_COMPLETE = 0x00080000
-Global Const $WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE = 0x00100000
 Global Const $WINHTTP_CALLBACK_STATUS_REQUEST_ERROR = 0x00200000
-Global Const $WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE = 0x00400000
 Global Const $WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS = 0xFFFFFFFF
 Global Const $hWINHTTPDLL__WINHTTP = DllOpen("winhttp.dll")
 DllOpen("winhttp.dll")
@@ -538,7 +520,7 @@ EndFunc
 Func __WinHttpVer()
 Return "1.6.4.1"
 EndFunc
-Global Const $VERSION = "1.2310.512.3154"
+Global Const $VERSION = "1.2310.512.5402"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
@@ -1251,6 +1233,7 @@ _Log('Error: Cannot write to file: "'&$sUpdate&'"',"_Update")
 Return SetError(0,14,1)
 EndIf
 FileClose($hFile)
+Run($sUpdate&" ~!Update",$sBaseDir,@SW_SHOW)
 Exit 0
 EndFunc
 Func __UpdateProgWatch()
@@ -1279,48 +1262,12 @@ Func __WINHTTP_STATUS_CALLBACK($hInternet, $iContext, $iInternetStatus, $pStatus
 #forceref $hInternet, $iContext, $pStatusInformation, $iStatusInformationLength
 Local $sStatus
 Switch $iInternetStatus
-Case $WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION
-$sStatus = "Closing the connection to the server"
-Case $WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER
-$sStatus = "Successfully connected to the server."
-Case $WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER
-$sStatus = "Connecting to the server."
-Case $WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED
-$sStatus = "Successfully closed the connection to the server."
-Case $WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE
-$sStatus = "Data is available to be retrieved with WinHttpReadData."
-Case $WINHTTP_CALLBACK_STATUS_HANDLE_CREATED
-$sStatus = "An HINTERNET handle has been created."
-Case $WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING
-$sStatus = "This handle value has been terminated."
-Case $WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE
-$sStatus = "The response header has been received and is available with WinHttpQueryHeaders."
 Case $WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE
 $sStatus = "Received an intermediate (100 level) status code message from the server."
-Case $WINHTTP_CALLBACK_STATUS_NAME_RESOLVED
-$sStatus = "Successfully found the IP address of the server."
-Case $WINHTTP_CALLBACK_STATUS_READ_COMPLETE
-$sStatus = "Data was successfully read from the server."
-Case $WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE
-$sStatus = "Waiting for the server to respond to a request."
-Case $WINHTTP_CALLBACK_STATUS_REDIRECT
-$sStatus = "An HTTP request is about to automatically redirect the request."
 Case $WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
 $sStatus = "An error occurred while sending an HTTP request."
-Case $WINHTTP_CALLBACK_STATUS_REQUEST_SENT
-$sStatus = "Successfully sent the information request to the server."
-Case $WINHTTP_CALLBACK_STATUS_RESOLVING_NAME
-$sStatus = "Looking up the IP address of a server name."
-Case $WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED
-$sStatus = "Successfully received a response from the server."
 Case $WINHTTP_CALLBACK_STATUS_SECURE_FAILURE
 $sStatus = "One or more errors were encountered while retrieving a Secure Sockets Layer (SSL) certificate from the server."
-Case $WINHTTP_CALLBACK_STATUS_SENDING_REQUEST
-$sStatus = "Sending the information request to the server."
-Case $WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
-$sStatus = "The request completed successfully."
-Case $WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
-$sStatus = "Data was successfully written to the server."
 EndSwitch
 _Log($sStatus,"__Update_SecureGet")
 EndFunc

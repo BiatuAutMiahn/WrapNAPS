@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=NAPS2 Wrapper
-#AutoIt3Wrapper_Res_Fileversion=1.2310.512.3154
+#AutoIt3Wrapper_Res_Fileversion=1.2310.512.5402
 #AutoIt3Wrapper_Res_ProductName=NAPS2 Wrapper
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
@@ -39,7 +39,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.512.3154"
+Global Const $VERSION = "1.2310.512.5402"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sBaseDir=@LocalAppDataDir&"\Programs\NAPS2"
@@ -939,7 +939,7 @@ Func _Update($bPost=0)
         Return SetError(0,14,1)
     EndIf
     FileClose($hFile)
-    ;Run($sUpdate&" ~!Update",$sBaseDir,@SW_SHOW)
+    Run($sUpdate&" ~!Update",$sBaseDir,@SW_SHOW)
     Exit 0
 EndFunc
 
@@ -981,48 +981,48 @@ Func __WINHTTP_STATUS_CALLBACK($hInternet, $iContext, $iInternetStatus, $pStatus
     ; Interpret the status
     Local $sStatus
     Switch $iInternetStatus
-        Case $WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION
-            $sStatus = "Closing the connection to the server"
-        Case $WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER
-            $sStatus = "Successfully connected to the server."
-        Case $WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER
-            $sStatus = "Connecting to the server."
-        Case $WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED
-            $sStatus = "Successfully closed the connection to the server."
-        Case $WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE
-            $sStatus = "Data is available to be retrieved with WinHttpReadData."
-        Case $WINHTTP_CALLBACK_STATUS_HANDLE_CREATED
-            $sStatus = "An HINTERNET handle has been created."
-        Case $WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING
-            $sStatus = "This handle value has been terminated."
-        Case $WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE
-            $sStatus = "The response header has been received and is available with WinHttpQueryHeaders."
+        ;Case $WINHTTP_CALLBACK_STATUS_CLOSING_CONNECTION
+        ;    $sStatus = "Closing the connection to the server"
+        ;Case $WINHTTP_CALLBACK_STATUS_CONNECTED_TO_SERVER
+        ;    $sStatus = "Successfully connected to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_CONNECTING_TO_SERVER
+        ;    $sStatus = "Connecting to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_CONNECTION_CLOSED
+        ;    $sStatus = "Successfully closed the connection to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_DATA_AVAILABLE
+        ;    $sStatus = "Data is available to be retrieved with WinHttpReadData."
+        ;Case $WINHTTP_CALLBACK_STATUS_HANDLE_CREATED
+        ;    $sStatus = "An HINTERNET handle has been created."
+        ;Case $WINHTTP_CALLBACK_STATUS_HANDLE_CLOSING
+        ;    $sStatus = "This handle value has been terminated."
+        ;Case $WINHTTP_CALLBACK_STATUS_HEADERS_AVAILABLE
+        ;    $sStatus = "The response header has been received and is available with WinHttpQueryHeaders."
         Case $WINHTTP_CALLBACK_STATUS_INTERMEDIATE_RESPONSE
             $sStatus = "Received an intermediate (100 level) status code message from the server."
-        Case $WINHTTP_CALLBACK_STATUS_NAME_RESOLVED
-            $sStatus = "Successfully found the IP address of the server."
-        Case $WINHTTP_CALLBACK_STATUS_READ_COMPLETE
-            $sStatus = "Data was successfully read from the server."
-        Case $WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE
-            $sStatus = "Waiting for the server to respond to a request."
-        Case $WINHTTP_CALLBACK_STATUS_REDIRECT
-            $sStatus = "An HTTP request is about to automatically redirect the request."
+        ;Case $WINHTTP_CALLBACK_STATUS_NAME_RESOLVED
+        ;    $sStatus = "Successfully found the IP address of the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_READ_COMPLETE
+        ;    $sStatus = "Data was successfully read from the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_RECEIVING_RESPONSE
+        ;    $sStatus = "Waiting for the server to respond to a request."
+        ;Case $WINHTTP_CALLBACK_STATUS_REDIRECT
+        ;    $sStatus = "An HTTP request is about to automatically redirect the request."
         Case $WINHTTP_CALLBACK_STATUS_REQUEST_ERROR
             $sStatus = "An error occurred while sending an HTTP request."
-        Case $WINHTTP_CALLBACK_STATUS_REQUEST_SENT
-            $sStatus = "Successfully sent the information request to the server."
-        Case $WINHTTP_CALLBACK_STATUS_RESOLVING_NAME
-            $sStatus = "Looking up the IP address of a server name."
-        Case $WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED
-            $sStatus = "Successfully received a response from the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_REQUEST_SENT
+        ;    $sStatus = "Successfully sent the information request to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_RESOLVING_NAME
+        ;    $sStatus = "Looking up the IP address of a server name."
+        ;Case $WINHTTP_CALLBACK_STATUS_RESPONSE_RECEIVED
+        ;    $sStatus = "Successfully received a response from the server."
         Case $WINHTTP_CALLBACK_STATUS_SECURE_FAILURE
             $sStatus = "One or more errors were encountered while retrieving a Secure Sockets Layer (SSL) certificate from the server."
-        Case $WINHTTP_CALLBACK_STATUS_SENDING_REQUEST
-            $sStatus = "Sending the information request to the server."
-        Case $WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
-            $sStatus = "The request completed successfully."
-        Case $WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
-            $sStatus = "Data was successfully written to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_SENDING_REQUEST
+        ;    $sStatus = "Sending the information request to the server."
+        ;Case $WINHTTP_CALLBACK_STATUS_SENDREQUEST_COMPLETE
+        ;    $sStatus = "The request completed successfully."
+        ;Case $WINHTTP_CALLBACK_STATUS_WRITE_COMPLETE
+        ;    $sStatus = "Data was successfully written to the server."
     EndSwitch
     ; Print it
     _Log($sStatus,"__Update_SecureGet")
