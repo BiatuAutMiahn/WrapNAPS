@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ArrayOfScanProfile>
+  <ScanProfile>
+    <Version>2</Version>
+    <IconID>0</IconID>
+    <Brightness>0</Brightness>
+    <Contrast>0</Contrast>
+    <Quality>75</Quality>
+    <BlankPageWhiteThreshold>70</BlankPageWhiteThreshold>
+    <BlankPageCoverageThreshold>25</BlankPageCoverageThreshold>
+    <WiaDelayBetweenScansSeconds>2</WiaDelayBetweenScansSeconds>
+    <MaxQuality>false</MaxQuality>
+    <IsDefault>false</IsDefault>
+    <UseNativeUI>false</UseNativeUI>
+    <EnableAutoSave>false</EnableAutoSave>
+    <AutoDeskew>false</AutoDeskew>
+    <BrightnessContrastAfterScan>false</BrightnessContrastAfterScan>
+    <ForcePageSize>false</ForcePageSize>
+    <ForcePageSizeCrop>false</ForcePageSizeCrop>
+    <ExcludeBlankPages>false</ExcludeBlankPages>
+    <WiaOffsetWidth>false</WiaOffsetWidth>
+    <WiaRetryOnFailure>false</WiaRetryOnFailure>
+    <WiaDelayBetweenScans>false</WiaDelayBetweenScans>
+    <FlipDuplexedPages>false</FlipDuplexedPages>
+    <DriverName>wia</DriverName>
+    <AfterScanScale>OneToOne</AfterScanScale>
+    <BitDepth>C24Bit</BitDepth>
+    <PageAlign>Right</PageAlign>
+    <PageSize>Letter</PageSize>
+    <Resolution>Dpi300</Resolution>
+    <TwainImpl>Default</TwainImpl>
+    <WiaVersion>Default</WiaVersion>
+    <CustomPageSizeName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <CustomPageSize p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <AutoSaveSettings p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <KeyValueOptions p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <PaperSource>Feeder</PaperSource>
+    <DisplayName>WrapNAPS_Feeder</DisplayName>
+    <Device>
+      <ID>{6BDD1FC6-810F-11D0-BEC7-08002BE2092F}\0000</ID>
+      <Name>HP69B5D3 (HP OfficeJet Pro 8020 series)</Name>
+    </Device>
+  </ScanProfile>
+  <ScanProfile>
+    <Version>2</Version>
+    <IconID>0</IconID>
+    <Brightness>0</Brightness>
+    <Contrast>0</Contrast>
+    <Quality>75</Quality>
+    <BlankPageWhiteThreshold>70</BlankPageWhiteThreshold>
+    <BlankPageCoverageThreshold>25</BlankPageCoverageThreshold>
+    <WiaDelayBetweenScansSeconds>2</WiaDelayBetweenScansSeconds>
+    <MaxQuality>false</MaxQuality>
+    <IsDefault>false</IsDefault>
+    <UseNativeUI>false</UseNativeUI>
+    <EnableAutoSave>false</EnableAutoSave>
+    <AutoDeskew>false</AutoDeskew>
+    <BrightnessContrastAfterScan>false</BrightnessContrastAfterScan>
+    <ForcePageSize>false</ForcePageSize>
+    <ForcePageSizeCrop>false</ForcePageSizeCrop>
+    <ExcludeBlankPages>false</ExcludeBlankPages>
+    <WiaOffsetWidth>false</WiaOffsetWidth>
+    <WiaRetryOnFailure>false</WiaRetryOnFailure>
+    <WiaDelayBetweenScans>false</WiaDelayBetweenScans>
+    <FlipDuplexedPages>false</FlipDuplexedPages>
+    <DriverName>wia</DriverName>
+    <AfterScanScale>OneToOne</AfterScanScale>
+    <BitDepth>C24Bit</BitDepth>
+    <PageAlign>Right</PageAlign>
+    <PageSize>Letter</PageSize>
+    <Resolution>Dpi300</Resolution>
+    <TwainImpl>Default</TwainImpl>
+    <WiaVersion>Default</WiaVersion>
+    <CustomPageSizeName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <CustomPageSize p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <AutoSaveSettings p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <KeyValueOptions p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <PaperSource>Duplex</PaperSource>
+    <DisplayName>WrapNAPS_Duplex</DisplayName>
+    <Device>
+      <ID>{6BDD1FC6-810F-11D0-BEC7-08002BE2092F}\0000</ID>
+      <Name>HP69B5D3 (HP OfficeJet Pro 8020 series)</Name>
+    </Device>
+  </ScanProfile>
+  <ScanProfile>
+    <Version>2</Version>
+    <IconID>0</IconID>
+    <Brightness>0</Brightness>
+    <Contrast>0</Contrast>
+    <Quality>75</Quality>
+    <BlankPageWhiteThreshold>70</BlankPageWhiteThreshold>
+    <BlankPageCoverageThreshold>25</BlankPageCoverageThreshold>
+    <WiaDelayBetweenScansSeconds>2</WiaDelayBetweenScansSeconds>
+    <MaxQuality>false</MaxQuality>
+    <IsDefault>false</IsDefault>
+    <UseNativeUI>false</UseNativeUI>
+    <EnableAutoSave>false</EnableAutoSave>
+    <AutoDeskew>false</AutoDeskew>
+    <BrightnessContrastAfterScan>false</BrightnessContrastAfterScan>
+    <ForcePageSize>false</ForcePageSize>
+    <ForcePageSizeCrop>false</ForcePageSizeCrop>
+    <ExcludeBlankPages>false</ExcludeBlankPages>
+    <WiaOffsetWidth>false</WiaOffsetWidth>
+    <WiaRetryOnFailure>false</WiaRetryOnFailure>
+    <WiaDelayBetweenScans>false</WiaDelayBetweenScans>
+    <FlipDuplexedPages>false</FlipDuplexedPages>
+    <DriverName>wia</DriverName>
+    <AfterScanScale>OneToOne</AfterScanScale>
+    <BitDepth>C24Bit</BitDepth>
+    <PageAlign>Right</PageAlign>
+    <PageSize>Letter</PageSize>
+    <Resolution>Dpi300</Resolution>
+    <TwainImpl>Default</TwainImpl>
+    <WiaVersion>Default</WiaVersion>
+    <CustomPageSizeName p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <CustomPageSize p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <AutoSaveSettings p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <KeyValueOptions p3:nil="true" xmlns:p3="http://www.w3.org/2001/XMLSchema-instance" />
+    <PaperSource>Glass</PaperSource>
+    <DisplayName>WrapNAPS_Glass</DisplayName>
+    <Device>
+      <ID>{6BDD1FC6-810F-11D0-BEC7-08002BE2092F}\0000</ID>
+      <Name>HP69B5D3 (HP OfficeJet Pro 8020 series)</Name>
+    </Device>
+  </ScanProfile>
+</ArrayOfScanProfile>

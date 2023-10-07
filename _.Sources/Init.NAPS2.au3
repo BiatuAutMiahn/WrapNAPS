@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=WrapNAPS2
-#AutoIt3Wrapper_Res_Fileversion=1.2310.622.4605
+#AutoIt3Wrapper_Res_Fileversion=1.2310.715.2259
 #AutoIt3Wrapper_Res_ProductName=WrapNAPS2
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
 #AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
@@ -33,9 +33,11 @@
 #include <WinAPIFiles.au3>
 #include <WinAPIProc.au3>
 #include <WinAPIError.au3>
+#include <WinAPIGdi.au3>
+
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.622.4605"
+Global Const $VERSION = "1.2310.715.2259"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
@@ -54,8 +56,8 @@ If _WinAPI_GetVersion()<10 Then
     Exit 1
 EndIf
 
-Global $bInstall,$bStay,$bRemember=1
-Global $iScanner,$iScanSrc
+Global $bInstall,$bStay,$bPostFile,$bPostDir,$bRemember=1
+Global $iScanner,$iScanSrc,$iPostMode
 Global $sRegKey="HKCU\Software\InfinitySys\Apps\WrapNAPS"
 Global $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
 Global $sInitialSaveDir=@UserProfileDir&"\Documents"
@@ -143,37 +145,79 @@ If @error Then
     Exit 1
 EndIf
 
-Local $iScale=1
-Local $iGuiWidth=256+128
+Local $iScale=(_WinAPI_EnumDisplaySettings('', $ENUM_CURRENT_SETTINGS)[0] / @DesktopWidth)*0.75
+Local $iGuiWidth=(256+128+8)*$iScale
+Local $iGuiHeight=(128+64+32+16+2)*$iScale
 Local $iGuiComL=4
-Local $iGuiComGrpL=8
-Local $iGuiComBtnH=25
-Local $iGuiComOptH=16
-Local $iGuiComOptW=128
-Local $iGuiScanOptT=52
-Local $iGuiOptT=16+2
-Local $iGuiBtnW=($iGuiWidth/3)-5
+Local $iMargin=4*$iScale
+Local $iGuiComGrpL=8*$iScale
+Local $iGuiComBtnH=38*$iScale
+Local $iGuiComOptH=24*$iScale
+Local $iGuiComOptW=((128+32+8)*$iScale)
+Local $iGuiComOptT=4*$iScale
+Local $iGuiOptT=18
+Local $iGuiBtnW=($iGuiWidth/3)-$iMargin-$iScale
+Local $iGuiRightGutter=4*$iScale
+Local $iGuiComboH=25*$iScale
+Local $iGuiRelT=$iMargin
+Local $iGuiOptHeadH=20*$iScale
+Local $iGuiStatTipOffs=20
+DllCall("User32.dll", "bool", "SetProcessDpiAwarenessContext" , "HWND", "DPI_AWARENESS_CONTEXT" -4)
 
-
-$hMain = GUICreate($sTitle, $iGuiWidth*$iScale, 192)
-GUISetFont(10*$iScale, 400, 0, "Consolas")
-$idScanner=GUICtrlCreateCombo("",$iGuiComL*$iScale,8*$iScale,($iGuiWidth-8)*$iScale,25,0x0003)
+$hMain = GUICreate($sTitle, $iGuiWidth, $iGuiHeight)
+GUISetFont(9, 400, 0, "Consolas")
+$idScanner=GUICtrlCreateCombo("",$iMargin,$iGuiRelT,($iGuiWidth-$iMargin-$iGuiRightGutter),$iGuiComboH,3)
 $hScanner=GUICtrlGetHandle($idScanner)
-GUICtrlCreateGroup("Document Source", $iGuiComL*$iScale, 33*$iScale, ($iGuiWidth-8)*$iScale, 126*$iScale)
-$idRadFlat = GUICtrlCreateRadio("Flatbed", ($iGuiComL+$iGuiComGrpL)*$iScale, $iGuiScanOptT*$iScale, $iGuiComOptW*$iScale, $iGuiComOptH*$iScale)
-$idRadFeed = GUICtrlCreateRadio("Document Feeder", ($iGuiComL+$iGuiComGrpL)*$iScale, ($iGuiScanOptT+$iGuiComOptH)*$iScale, $iGuiComOptW*$iScale, $iGuiComOptH*$iScale)
-$idRadDplx = GUICtrlCreateRadio("Duplex Tray", ($iGuiComL+$iGuiComGrpL)*$iScale, ($iGuiScanOptT+($iGuiComOptH*2))*$iScale, $iGuiComOptW*$iScale, $iGuiComOptH*$iScale)
-GUICtrlCreateGroup("Options", $iGuiComL*$iScale, 101*$iScale, ($iGuiWidth-8)*$iScale, 58*$iScale)
-$idChkRemb = GUICtrlCreateCheckbox("Remember my last choices", ($iGuiComL+$iGuiComGrpL)*$iScale, (101+$iGuiOptT)*$iScale, ($iGuiWidth-32)*$iScale, $iGuiComOptH*$iScale)
-$idChkStay = GUICtrlCreateCheckbox("Stay Open (Batch Scan)", ($iGuiComL+$iGuiComGrpL)*$iScale, (101+($iGuiOptT*2))*$iScale, ($iGuiWidth-32)*$iScale, $iGuiComOptH*$iScale)
-$idBtnScan = GUICtrlCreateButton("Scan", $iGuiComL, 163, $iGuiBtnW, $iGuiComBtnH)
-$idBtnNAPS = GUICtrlCreateButton("NAPS2", $iGuiComL+$iGuiBtnW+4, 163, $iGuiBtnW, $iGuiComBtnH)
-$idBtnExit = GUICtrlCreateButton("Exit", $iGuiComL+($iGuiBtnW*2)+8, 163, $iGuiBtnW, $iGuiComBtnH)
+$iGuiRelT+=$iGuiComboH+$iMargin
+GUICtrlCreateGroup("Document Source", $iMargin, $iGuiRelT, $iMargin+$iGuiComGrpL+$iGuiComOptW, $iGuiOptHeadH+(($iGuiComOptH+$iMargin)*3)+$iMargin)
+$iGuiRelT+=$iMargin+$iGuiOptHeadH
+$idRadFlat = GUICtrlCreateRadio("Flatbed", ($iMargin+$iGuiComGrpL), $iGuiRelT, $iGuiComOptW, $iGuiComOptH)
+GUICtrlSetTip(-1,"Select this option if you want to scan documents from flatbed, or glass. (Usually involves lifting the top.)")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+$idRadFeed = GUICtrlCreateRadio("Document Feeder", ($iMargin+$iGuiComGrpL), $iGuiRelT, $iGuiComOptW, $iGuiComOptH)
+GUICtrlSetTip(-1,"Select this option if you want to scan documents from the document feeder (typically at the top).")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+$idRadDplx = GUICtrlCreateRadio("Duplex Tray", ($iMargin+$iGuiComGrpL), $iGuiRelT, $iGuiComOptW, $iGuiComOptH)
+GUICtrlSetTip(-1,"Select this option if you want to scan documents from the duplex tray.")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+GUICtrlCreateGroup("Options", $iMargin, $iGuiRelT, $iMargin+$iGuiComGrpL+$iGuiComOptW, $iGuiOptHeadH+($iGuiComOptH)+($iMargin*2))
+$iGuiRelT+=$iMargin+$iGuiOptHeadH
+$idChkRemb = GUICtrlCreateCheckbox("Remember options", ($iMargin+$iGuiComGrpL), $iGuiRelT, $iGuiComOptW, $iGuiComOptH)
+GUICtrlSetTip(-1,"Remember these options for the next run (Excludes the Stay Open option).")
+$iGuiRelT=$iGuiComboH+($iMargin*6)
+GUICtrlCreateGroup("Post-Scan Actions", $iGuiComGrpL+$iGuiComOptW+($iMargin*4), $iGuiRelT, $iMargin+$iGuiComGrpL+$iGuiComOptW+(16*$iScale), $iGuiOptHeadH+(($iGuiComOptH+$iMargin)*4)+$iMargin)
+$iGuiRelT+=$iMargin+$iGuiOptHeadH
+$idRPSDir = GUICtrlCreateRadio("Open Scans Folder", ($iGuiComGrpL+$iGuiComOptW+($iMargin*4))+($iGuiComGrpL), $iGuiRelT, $iGuiComOptW+(16*$iScale), $iGuiComOptH)
+GUICtrlSetTip(-1,"After the scan finishes, open the destination folder.")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+$idRPSScan = GUICtrlCreateRadio("Open Scanned File", ($iGuiComGrpL+$iGuiComOptW+($iMargin*4))+($iGuiComGrpL), $iGuiRelT, $iGuiComOptW+(16*$iScale), $iGuiComOptH)
+GUICtrlSetTip(-1,"After the scan finishes, open the scanned file.")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+$idRPSNada = GUICtrlCreateRadio("Do Nothing", ($iGuiComGrpL+$iGuiComOptW+($iMargin*4))+($iGuiComGrpL), $iGuiRelT, $iGuiComOptW+(16*$iScale), $iGuiComOptH)
+GUICtrlSetTip(-1,"After the scan finishes, do nothing.")
+$iGuiRelT+=$iMargin+$iGuiComOptH
+$idChkStay = GUICtrlCreateCheckbox("Stay Open", ($iGuiComGrpL+$iGuiComOptW+($iMargin*4))+($iGuiComGrpL), $iGuiRelT, $iGuiComOptW+(16*$iScale), $iGuiComOptH)
+GUICtrlSetTip(-1,"Keep "&$sAlias&" open for consecutive scans.")
+$iGuiRelT = $iGuiHeight-$iMargin-$iGuiComBtnH
+$idBtnScan = GUICtrlCreateButton("Scan", $iMargin, $iGuiRelT, $iGuiBtnW, $iGuiComBtnH)
+GUICtrlSetTip(-1,"Start the scan.")
+$idBtnNAPS = GUICtrlCreateButton("NAPS2", ($iMargin+$iGuiBtnW+$iMargin), $iGuiRelT, $iGuiBtnW, $iGuiComBtnH)
+GUICtrlSetTip(-1,"Open Not Another PDF Scanner 2 (NAPS2).")
+$idBtnExit = GUICtrlCreateButton("Exit", $iMargin+($iGuiBtnW+$iMargin)*2, $iGuiRelT, $iGuiBtnW, $iGuiComBtnH)
+GUICtrlSetTip(-1,"Exit this application.")
 GUICtrlSetState($idScanner,$GUI_DISABLE)
 GUICtrlSetState($idRadDplx,$GUI_DISABLE)
 GUICtrlSetState($idRadFeed,$GUI_DISABLE)
 GUICtrlSetState($idRadFlat,$GUI_DISABLE)
 GUICtrlSetState($idBtnScan,$GUI_DISABLE)
+$iPostMode=RegRead($sRegKey,"PostMode")
+If BitAND($iPostMode,0x1) Then GUICtrlSetState($idRPSDir,$GUI_CHECKED)
+If BitAND($iPostMode,0x2) Then GUICtrlSetState($idRPSScan,$GUI_CHECKED)
+If BitAND($iPostMode,0x4) Then GUICtrlSetState($idRPSNada,$GUI_CHECKED)
+GUICtrlSetState($idRPSDir,$GUI_DISABLE)
+GUICtrlSetState($idRPSScan,$GUI_DISABLE)
+GUICtrlSetState($idRPSNada,$GUI_DISABLE)
+
 If RegRead($sRegKey,"Remember") Then
     $bRemember=1
     GUICtrlSetState($idChkRemb,$GUI_CHECKED)
@@ -190,29 +234,66 @@ While 1
 		Case $GUI_EVENT_CLOSE, $idBtnExit
 			_Exit(0)
         Case $idBtnNAPS
+            GUICtrlSetState($idScanner,$GUI_DISABLE)
+            GUICtrlSetState($idRadDplx,$GUI_DISABLE)
+            GUICtrlSetState($idRadFeed,$GUI_DISABLE)
+            GUICtrlSetState($idRadFlat,$GUI_DISABLE)
+            GUICtrlSetState($idChkRemb,$GUI_DISABLE)
+            GUICtrlSetState($idRPSDir,$GUI_DISABLE)
+            GUICtrlSetState($idRPSScan,$GUI_DISABLE)
+            GUICtrlSetState($idRPSNada,$GUI_DISABLE)
+            GUICtrlSetState($idChkStay,$GUI_DISABLE)
+            GUICtrlSetState($idBtnScan,$GUI_DISABLE)
+            GUICtrlSetState($idBtnNAPS,$GUI_DISABLE)
+            GUICtrlSetState($idBtnExit,$GUI_DISABLE)
             AdlibUnRegister("_rescan")
             $aPos=MouseGetPos()
-            ToolTip("Starting NAPS2...",$aPos[0]+10,$aPos[1]+10)
+            ToolTip("Starting NAPS2...",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
             $hTimeout=TimerInit()
             $iPid=Run($sBaseDir&"\App\NAPS2.exe",$sBaseDir,@SW_SHOW)
             While Sleep(10)
                 $aPos=MouseGetPos()
-                ToolTip("Starting NAPS2...",$aPos[0]+10,$aPos[1]+10)
+                ToolTip("Starting NAPS2...",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
                 $aWnd=_WinAPI_EnumProcessWindows($iPid,1)
                 If Not IsArray($aWnd) Then ContinueLoop
                 If $aWnd[0][0] Then ExitLoop
             WEnd
-            ToolTip("Starting NAPS2...Done",$aPos[0]+10,$aPos[1]+10)
+            ToolTip("Starting NAPS2...Done",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
             Sleep(250)
             ToolTip('')
             If Not $bStay Then
                 Sleep(1000)
                 _Exit(0)
             EndIf
-
+            GUICtrlSetState($idScanner,$GUI_ENABLE)
+            GUICtrlSetState($idRadDplx,$GUI_ENABLE)
+            GUICtrlSetState($idRadFeed,$GUI_ENABLE)
+            GUICtrlSetState($idRadFlat,$GUI_ENABLE)
+            GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+            GUICtrlSetState($idRPSDir,$GUI_ENABLE)
+            GUICtrlSetState($idRPSScan,$GUI_ENABLE)
+            GUICtrlSetState($idRPSNada,$GUI_ENABLE)
+            GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+            GUICtrlSetState($idChkStay,$GUI_ENABLE)
+            GUICtrlSetState($idBtnScan,$GUI_ENABLE)
+            GUICtrlSetState($idBtnNAPS,$GUI_ENABLE)
+            GUICtrlSetState($idBtnExit,$GUI_ENABLE)
             AdlibRegister("_rescan",1000)
         Case $idBtnScan
+            GUICtrlSetState($idScanner,$GUI_DISABLE)
+            GUICtrlSetState($idRadDplx,$GUI_DISABLE)
+            GUICtrlSetState($idRadFeed,$GUI_DISABLE)
+            GUICtrlSetState($idRadFlat,$GUI_DISABLE)
+            GUICtrlSetState($idChkRemb,$GUI_DISABLE)
+            GUICtrlSetState($idRPSDir,$GUI_DISABLE)
+            GUICtrlSetState($idRPSScan,$GUI_DISABLE)
+            GUICtrlSetState($idRPSNada,$GUI_DISABLE)
+            GUICtrlSetState($idChkStay,$GUI_DISABLE)
+            GUICtrlSetState($idBtnScan,$GUI_DISABLE)
+            GUICtrlSetState($idBtnNAPS,$GUI_DISABLE)
+            GUICtrlSetState($idBtnExit,$GUI_DISABLE)
             AdlibUnRegister("_rescan")
+
             $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
             _UpdProfile()
             $sProfile=''
@@ -232,13 +313,13 @@ While 1
             $sExecPath=$sBaseDir&"\App\NAPS2.Console.exe"
             If StringInStr($sExecPath,' ') Then $sExecPath='"'&$sExecPath&'"'
             ToolTip('')
-            ToolTip("Scanning...",$aPos[0]+10,$aPos[1]+10)
+            ToolTip("Scanning...",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
             ConsoleWrite($sProfile&@CRLF)
             $iPid=Run($sExecPath&" --progress -p "&$sProfile&' --output "'&$sDestPath&'\'&$sDest&'"',$sBaseDir,@SW_HIDE,0x10008)
             Local $sOutput=''
             While True
                 $aPos=MouseGetPos()
-                ToolTip("Scanning...",$aPos[0]+10,$aPos[1]+10)
+                ToolTip("Scanning...",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
                 Sleep(10)
                 If StdoutRead($iPid,1) Then
                     $sOutput&=StdoutRead($iPid)
@@ -250,7 +331,7 @@ While 1
                 _Log("NAPS2.Console:"&@LF&$sOutput)
                 For $iIdx=0 To UBound($aErrMsgs,1)-1
                     If StringInStr($sOutput,$aErrMsgs[$iIdx]) Then
-                        ToolTip("Scanning...Failed",$aPos[0]+10,$aPos[1]+10)
+                        ToolTip("Scanning...Failed",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
                         Sleep(250)
                         ToolTip('')
                         MsgBox(16,$sTitle,$aErrMsgs[$iIdx])
@@ -258,13 +339,32 @@ While 1
                     EndIf
                 Next
             EndIf
-            ToolTip("Scanning...Done",$aPos[0]+10,$aPos[1]+10)
+            ToolTip("Scanning...Done",$aPos[0]+($iGuiStatTipOffs*$iScale),$aPos[1]+($iGuiStatTipOffs*$iScale))
             Sleep(500)
             ToolTip('')
+            If BitAND($iPostMode,0x1) Then
+                ShellExecute($sDestPath)
+            EndIf
+            If BitAND($iPostMode,0x2) Then
+                ShellExecute($sDestPath&'\'&$sDest)
+            EndIf
             If Not $bStay Then
                 Sleep(1000)
                 _Exit(0)
             EndIf
+            GUICtrlSetState($idScanner,$GUI_ENABLE)
+            GUICtrlSetState($idRadDplx,$GUI_ENABLE)
+            GUICtrlSetState($idRadFeed,$GUI_ENABLE)
+            GUICtrlSetState($idRadFlat,$GUI_ENABLE)
+            GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+            GUICtrlSetState($idRPSDir,$GUI_ENABLE)
+            GUICtrlSetState($idRPSScan,$GUI_ENABLE)
+            GUICtrlSetState($idRPSNada,$GUI_ENABLE)
+            GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+            GUICtrlSetState($idChkStay,$GUI_ENABLE)
+            GUICtrlSetState($idBtnScan,$GUI_ENABLE)
+            GUICtrlSetState($idBtnNAPS,$GUI_ENABLE)
+            GUICtrlSetState($idBtnExit,$GUI_ENABLE)
             AdlibRegister("_rescan",1000)
 	EndSwitch
 WEnd
@@ -284,6 +384,7 @@ Func _savePrefs()
     RegWrite($sRegKey,"LastScanner","REG_SZ",$aScanners[$iScanner][1])
     RegWrite($sRegKey,"Remember","REG_DWORD",$bRemember)
     RegWrite($sRegKey&"\DocSources",$aScanners[$iScanner][1],"REG_DWORD",$iScanSrc)
+    RegWrite($sRegKey,"PostMode","REG_DWORD",$iPostMode)
 EndFunc
 
 Func _udpScanners()
@@ -316,7 +417,9 @@ Func _udpScanners()
             If $iScanSrc<>0 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
         EndIf
         GUICtrlSetState($idScanner,($aScanners[0][0]>1 ? $GUI_ENABLE : $GUI_DISABLE))
-        ;GUICtrlSetState($idScanner,$GUI_ENABLE)
+        GUICtrlSetState($idRPSDir,$GUI_ENABLE)
+        GUICtrlSetState($idRPSScan,$GUI_ENABLE)
+        GUICtrlSetState($idRPSNada,$GUI_ENABLE)
     Else
         _GUICtrlComboBox_AddString($hScanner,"No Scanners Available")
         _GUICtrlComboBox_SetCurSel($hScanner,0)
@@ -325,6 +428,9 @@ Func _udpScanners()
         GUICtrlSetState($idRadDplx,$GUI_DISABLE)
         GUICtrlSetState($idRadFeed,$GUI_DISABLE)
         GUICtrlSetState($idRadFlat,$GUI_DISABLE)
+        GUICtrlSetState($idRPSDir,$GUI_DISABLE)
+        GUICtrlSetState($idRPSScan,$GUI_DISABLE)
+        GUICtrlSetState($idRPSNada,$GUI_DISABLE)
     EndIf
     _GUICtrlComboBox_EndUpdate($hScanner)
 EndFunc
@@ -445,6 +551,10 @@ Func WM_COMMAND($hWnd, $iMsg, $wParam, $lParam)
             If BitAND($iScanSrc,0x1) Then GUICtrlSetState($idRadFlat,$GUI_CHECKED)
             If BitAND($iScanSrc,0x2) Then GUICtrlSetState($idRadFeed,$GUI_CHECKED)
             If BitAND($iScanSrc,0x4) Then GUICtrlSetState($idRadDplx,$GUI_CHECKED)
+            $iPostMode=RegRead($sRegKey,"PostMode")
+            If BitAND($iPostMode,0x1) Then GUICtrlSetState($idRPSDir,$GUI_CHECKED)
+            If BitAND($iPostMode,0x2) Then GUICtrlSetState($idRPSScan,$GUI_CHECKED)
+            If BitAND($iPostMode,0x4) Then GUICtrlSetState($idRPSNada,$GUI_CHECKED)
         Case $BN_CLICKED
             Switch $iId
                 Case $idRadFlat
@@ -459,6 +569,12 @@ Func WM_COMMAND($hWnd, $iMsg, $wParam, $lParam)
                     If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iScanSrc=0x4
                     ;ConsoleWrite("iScanSrc:"&$iScanSrc&@CRLF)
                     If $iScanner<>-1 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
+                Case $idRPSDir
+                    If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iPostMode=0x1
+                Case $idRPSScan
+                    If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iPostMode=0x2
+                Case $idRPSNada
+                    If BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED Then $iPostMode=0x4
                 Case $idChkRemb
                     $bRemember=BitAnd(GUICtrlRead($iId),$GUI_CHECKED) = $GUI_CHECKED
                     ;ConsoleWrite("Remb:"&$bRemember&@CRLF)
@@ -707,7 +823,6 @@ EndFunc
 Func _MsgNoProfUpdate()
     MsgBox(16,$sTitle,"Error: Could not update NAPS2 profiles.xml. Please contact your system administrator or see log for details.")
 EndFunc
-
 
 Func _COMErrorReset()
     $g_iCOMError=0
