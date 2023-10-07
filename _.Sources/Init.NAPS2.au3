@@ -3,7 +3,7 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=WrapNAPS2
-#AutoIt3Wrapper_Res_Fileversion=1.2310.609.852
+#AutoIt3Wrapper_Res_Fileversion=1.2310.622.4605
 #AutoIt3Wrapper_Res_ProductName=WrapNAPS2
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
 #AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
@@ -35,7 +35,7 @@
 #include <WinAPIError.au3>
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.609.852"
+Global Const $VERSION = "1.2310.622.4605"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
@@ -61,7 +61,8 @@ Global $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
 Global $sInitialSaveDir=@UserProfileDir&"\Documents"
 ;Global $sOneDrivePath=@UserProfileDir&"\OneDrive"; redacted CPNI
 Global $sDestPath;=$sOneDrivePath&'\'&$sSaveDir
-Global $aScanners[1][3]
+Global $oWia,$iScanModLast=-1
+Global $aScanners[1][4]
 $aScanners[0][0]=0
 
 ; Update Variables
@@ -179,9 +180,9 @@ If RegRead($sRegKey,"Remember") Then
 EndIf
 GUIRegisterMsg($WM_COMMAND, "WM_COMMAND")
 GUISetState(@SW_SHOW,$hMain)
-_rescan()
+getScanners(1)
 AdlibRegister("_DoUpdate")
-
+AdlibRegister("_rescan",1000)
 
 While 1
 	$nMsg = GUIGetMsg()
@@ -189,6 +190,7 @@ While 1
 		Case $GUI_EVENT_CLOSE, $idBtnExit
 			_Exit(0)
         Case $idBtnNAPS
+            AdlibUnRegister("_rescan")
             $aPos=MouseGetPos()
             ToolTip("Starting NAPS2...",$aPos[0]+10,$aPos[1]+10)
             $hTimeout=TimerInit()
@@ -203,18 +205,24 @@ While 1
             ToolTip("Starting NAPS2...Done",$aPos[0]+10,$aPos[1]+10)
             Sleep(250)
             ToolTip('')
-            If Not $bStay Then _Exit(0)
+            If Not $bStay Then
+                Sleep(1000)
+                _Exit(0)
+            EndIf
+
+            AdlibRegister("_rescan",1000)
         Case $idBtnScan
+            AdlibUnRegister("_rescan")
             $sDest=@YEAR&'.'&@MON&'.'&@MDAY&','&@HOUR&@MIN&@SEC&'- Scan.pdf'
             _UpdProfile()
             $sProfile=''
             Switch $iScanSrc
                 Case 0x1
-                    $sProfile="Auto_Glass"
+                    $sProfile=$sAlias&"_Glass"
                 Case 0x2
-                    $sProfile="Auto_Feeder"
+                    $sProfile=$sAlias&"_Feeder"
                 Case 0x4
-                    $sProfile="Auto_Duplex"
+                    $sProfile=$sAlias&"_Duplex"
             EndSwitch
             $aPos=MouseGetPos()
             ;ConsoleWrite($sBaseDir&"\App\NAPS2.Console.exe --progress -p "&$sProfile&' --output "'&$sDestPath&'\'&$sDest&'"'&@CRLF)
@@ -223,17 +231,21 @@ While 1
             EndIf
             $sExecPath=$sBaseDir&"\App\NAPS2.Console.exe"
             If StringInStr($sExecPath,' ') Then $sExecPath='"'&$sExecPath&'"'
-            $iPid=Run($sExecPath&" --progress -p "&$sProfile&' --output "'&$sDestPath&'\'&$sDest&'"',$sBaseDir,@SW_HIDE,0x10008)
+            ToolTip('')
             ToolTip("Scanning...",$aPos[0]+10,$aPos[1]+10)
+            ConsoleWrite($sProfile&@CRLF)
+            $iPid=Run($sExecPath&" --progress -p "&$sProfile&' --output "'&$sDestPath&'\'&$sDest&'"',$sBaseDir,@SW_HIDE,0x10008)
             Local $sOutput=''
-            Do
-                If StdoutRead($iPid,1) Then
-                    $sOutput&=StdoutRead($iPid)
-                EndIf
+            While True
                 $aPos=MouseGetPos()
                 ToolTip("Scanning...",$aPos[0]+10,$aPos[1]+10)
                 Sleep(10)
-            Until Not ProcessExists($iPid)
+                If StdoutRead($iPid,1) Then
+                    $sOutput&=StdoutRead($iPid)
+                    If @error Then ExitLoop
+                EndIf
+                If Not ProcessExists($iPid) Then ExitLoop
+            WEnd
             If $sOutput<>'' Then
                 _Log("NAPS2.Console:"&@LF&$sOutput)
                 For $iIdx=0 To UBound($aErrMsgs,1)-1
@@ -249,7 +261,11 @@ While 1
             ToolTip("Scanning...Done",$aPos[0]+10,$aPos[1]+10)
             Sleep(500)
             ToolTip('')
-            If Not $bStay Then _Exit(0)
+            If Not $bStay Then
+                Sleep(1000)
+                _Exit(0)
+            EndIf
+            AdlibRegister("_rescan",1000)
 	EndSwitch
 WEnd
 
@@ -270,22 +286,6 @@ Func _savePrefs()
     RegWrite($sRegKey&"\DocSources",$aScanners[$iScanner][1],"REG_DWORD",$iScanSrc)
 EndFunc
 
-Func _rescan()
-    _GUICtrlComboBox_BeginUpdate($hScanner)
-    _GUICtrlComboBox_ResetContent($hScanner)
-    _GUICtrlComboBox_AddString($hScanner,"Detecting Scanners...")
-    _GUICtrlComboBox_SetCurSel($hScanner,0)
-    GUICtrlSetState($idScanner,$GUI_DISABLE)
-    GUICtrlSetState($idBtnScan,$GUI_DISABLE)
-    GUICtrlSetState($idRadDplx,$GUI_DISABLE)
-    GUICtrlSetState($idRadFeed,$GUI_DISABLE)
-    GUICtrlSetState($idRadFlat,$GUI_DISABLE)
-    _GUICtrlComboBox_EndUpdate($hScanner)
-    Sleep(500)
-    getScanners()
-    _udpScanners()
-EndFunc
-
 Func _udpScanners()
     _GUICtrlComboBox_BeginUpdate($hScanner)
     _GUICtrlComboBox_ResetContent($hScanner)
@@ -294,6 +294,7 @@ Func _udpScanners()
         $sLastScanner=RegRead($sRegKey,"LastScanner")
         If @error Then $sLastScanner=-1
         For $i=1 To $aScanners[0][0]
+            If $aScanners[$i][3]=0 Then ContinueLoop
             _GUICtrlComboBox_AddString($hScanner,$aScanners[$i][0])
             If $sLastScanner<>-1 Then
                 If $sLastScanner=$aScanners[$i][1] Then $iScanner=$i
@@ -314,7 +315,8 @@ Func _udpScanners()
             EndIf
             If $iScanSrc<>0 Then GUICtrlSetState($idBtnScan,$GUI_ENABLE)
         EndIf
-        GUICtrlSetState($idScanner,$GUI_ENABLE)
+        GUICtrlSetState($idScanner,($aScanners[0][0]>1 ? $GUI_ENABLE : $GUI_DISABLE))
+        ;GUICtrlSetState($idScanner,$GUI_ENABLE)
     Else
         _GUICtrlComboBox_AddString($hScanner,"No Scanners Available")
         _GUICtrlComboBox_SetCurSel($hScanner,0)
@@ -333,12 +335,80 @@ Func _isDir($sPath)
     Return SetError(0,0,1)
 EndFunc
 
-Func getScanners()
-    Local $oWia=ObjCreate("WIA.DeviceManager")
+Func _rescan()
+    getScanners()
+EndFunc
+
+Func getScanners($bFirstRun=0)
+    If $bFirstRun Then
+        _GUICtrlComboBox_BeginUpdate($hScanner)
+        _GUICtrlComboBox_ResetContent($hScanner)
+        _GUICtrlComboBox_AddString($hScanner,"Detecting Scanners...")
+        _GUICtrlComboBox_SetCurSel($hScanner,0)
+        GUICtrlSetState($idScanner,$GUI_DISABLE)
+        GUICtrlSetState($idBtnScan,$GUI_DISABLE)
+        GUICtrlSetState($idRadDplx,$GUI_DISABLE)
+        GUICtrlSetState($idRadFeed,$GUI_DISABLE)
+        GUICtrlSetState($idRadFlat,$GUI_DISABLE)
+        _GUICtrlComboBox_EndUpdate($hScanner)
+        Sleep(500)
+    EndIf
+    ; Get devices.
+    Local $aDevs=getScanDevs()
+    If @Error Then
+        Local $iErr=@Extended,$sMsg='Error: '
+        Switch $iErr
+            Case 0
+                $sMsg&="Cannot initialize the WIA.DeviceManager interface."
+            Case 1
+                $sMsg&="WIA.DeviceManager.DeviceInfos failed. Code: "&$g_iCOMError&','&$g_iCOMErrorExt
+        EndSwitch
+        _Log($sMsg,"getScanners")
+        MsgBox(16,$sTitle,"There was an error detecting scanners. Please contact your system administrator or check logs.")
+        Exit 1
+    EndIf
+    Local $iMax=UBound($aScanners,1)
+    Local $a,$b,$aStates[$iMax+1],$iScanMod=$iMax
+    ; Check if devices are known and online.
+    For $a=1 To $iMax-1
+        $aStates[$a]=$aScanners[$a][3]
+        $aScanners[$a][3]=0
+    Next
+    If $aDevs[0][0] Then
+        For $b=1 To $aDevs[0][0]
+            If $iMax Then
+                For $a=1 To $iMax-1
+                    If $aDevs[$b][1]<>$aScanners[$a][1] Then ContinueLoop
+                    $aScanners[$a][3]=1
+                    If $aStates[$a]<>$aScanners[$a][3] Then $iScanMod+=1
+                    ContinueLoop 2
+                Next
+            EndIf
+            $iMax=UBound($aScanners,1)
+            ReDim $aScanners[$iMax+1][4]
+            For $c=0 To 2
+                $aScanners[$iMax][$c]=$aDevs[$b][$c]
+            Next
+            $aScanners[$iMax][3]=1
+            $iScanMod+=1
+        Next
+        $aScanners[0][0]=$iMax
+    Else
+        Dim $aScanners[1][4]
+        $aScanners[0][0]=0
+    EndIf
+    If $iScanMod<>$iScanModLast Then _udpScanners()
+    $iScanModLast=$iScanMod
+EndFunc
+
+Func getScanDevs()
+    Local $aRet[1][3]
+    $aRet[0][0]=0
+    If Not IsObj($oWia) Then $oWia=ObjCreate("WIA.DeviceManager")
     If Not IsObj($oWia) Then Return SetError(1,0,0)
     Local $oDevs=$oWia.DeviceInfos
     If Not IsObj($oDevs) Then Return SetError(1,1,0)
-    If $oDevs.Count=0 Then Return SetError(1,2,0)
+    If $oDevs.Count=0 Then Return SetError(0,1,$aRet)
     Local $iMax=0
     For $oDev In $oDevs
         If Not IsObj($oDev) Then ContinueLoop
@@ -349,14 +419,14 @@ Func getScanners()
             ContinueLoop
         EndIf
         If Not IsObj($oScanner) Then ContinueLoop
-        $iMax=UBound($aScanners)
-        ReDim $aScanners[$iMax+1][3]
-        $aScanners[$iMax][0]=$oDev.Properties("Name").Value
-        $aScanners[$iMax][1]=$oDev.DeviceID
-        $aScanners[$iMax][2]=$oScanner.Properties("Document Handling Capabilities").Value
+        $iMax=UBound($aRet)
+        ReDim $aRet[$iMax+1][3]
+        $aRet[$iMax][0]=$oDev.Properties("Name").Value
+        $aRet[$iMax][1]=$oDev.DeviceID
+        $aRet[$iMax][2]=$oScanner.Properties("Document Handling Capabilities").Value
     Next
-    $aScanners[0][0]=$iMax
-    Return SetError(0,0,1)
+    $aRet[0][0]=$iMax
+    Return SetError(0,0,$aRet)
 EndFunc
 
 Func WM_COMMAND($hWnd, $iMsg, $wParam, $lParam)
@@ -447,7 +517,7 @@ Func _UpdProfile()
     Local $bWNPD
     Local $bWNPG
     Local $sNewProfile
-    Local $sProfilePath="Profiles.xml"
+    Local $sProfilePath=$sBaseDir&"\Data\Profiles.xml"
     Local $bExists=FileExists($sProfilePath)
     Local $hFile
     ;FileSetPos($hFile,0)
@@ -570,6 +640,7 @@ Func _UpdProfile()
             _Log("Error: Couldn't write NAPS2 Profiles.xml","_UpdProfile")
             Return SetError(1,10,0)
         EndIf
+        FileClose($hFile)
     Else
         ; Profiles.xml does not exist, creating default.
         $hFile=FileOpen($sProfilePath,2)
@@ -598,8 +669,8 @@ Func _GenProfile($iType)
     Local $sData
     Local $aIntFields=StringSplit("Version|IconID|Brightness|Contrast|Quality|BlankPageWhiteThreshold|BlankPageCoverageThreshold|WiaDelayBetweenScansSeconds",'|')
     Local $aIntData=StringSplit("2|0|0|0|75|70|25|2",'|')
-    Local $aBoolFields=StringSplit("MaxQuality|IsDefault|UseNativeUI|AfterScanScale|EnableAutoSave|AutoDeskew|BrightnessContrastAfterScan|ForcePageSize|ForcePageSizeCrop|ExcludeBlankPages|WiaOffsetWidth|WiaRetryOnFailure|WiaDelayBetweenScans|FlipDuplexedPages",'|')
-    Local $aBoolData=StringSplit("0|0|0|0|0|0|0|0|0|0|0|0|2|0",'|')
+    Local $aBoolFields=StringSplit("MaxQuality|IsDefault|UseNativeUI|EnableAutoSave|AutoDeskew|BrightnessContrastAfterScan|ForcePageSize|ForcePageSizeCrop|ExcludeBlankPages|WiaOffsetWidth|WiaRetryOnFailure|WiaDelayBetweenScans|FlipDuplexedPages",'|')
+    Local $aBoolData=StringSplit("0|0|0|0|0|0|0|0|0|0|0|2|0",'|')
     Local $aStrFields=StringSplit("DriverName|AfterScanScale|BitDepth|PageAlign|PageSize|Resolution|TwainImpl|WiaVersion",'|')
     Local $aStrData=StringSplit("wia|OneToOne|C24Bit|Right|Letter|Dpi300|Default|Default",'|')
     Local $aTmplFields=StringSplit("CustomPageSizeName|CustomPageSize|AutoSaveSettings|KeyValueOptions",'|')
