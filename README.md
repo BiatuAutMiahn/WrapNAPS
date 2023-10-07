@@ -10,10 +10,11 @@ Previously a tech at my last job utilized NAPS2 and a batch script to execute NA
 - Select scanner via dropdown.
 - Select document source (Duplex, Flatbed/Glass, Document Feeder)
 - Detects scanner's capabilities (For supported document sources)
-- Option to remember last settings
+- Option to remember last settings.
 - Option to keep open for batch scans.
 - Option to launch full NAPS2.
 - Update checking.
+- Post scan options like open folder/scanned file.
 
 # Download
 You can download the latest release in the releases section of this repo. The release is a 7-Zip Self Extracting archive containing `Init.NAPS2.exe, App, Data, and LICENSE` The 7z SFX will extract to the current user's profile under `AppData\Local\Programs\NAPS2`, then run `Init.NAPS2.exe ~!Install`.
@@ -22,7 +23,7 @@ You can download the latest release in the releases section of this repo. The re
 1. After the installation finishes and you click the "Scan to PDF" link on your desktop.
 2. If you have a scanner available it will appear in the top dropdown. If there is only one, it will be automatically selected, and conversely if you have no scanners attached you will be unable to select a scanner and must restart the program after one is connected. (In the future the program will detect when scanners are connected/disconnected).
 3. After you select a scanner you will need to select a Document Source. Flatbed, Glass, or Duplex. (Depending on the scanner or driver used some of these options may be unavailable).
-4. By default the `Remember my last choices` will be selected, if you dont want to save the changes made during this session simply uncheck this option.
+4. By default the `Remember options` will be selected, if you dont want to save the changes made during this session simply uncheck this option.
 5. By default WrapNAPS will exit after you start a scan. Check `Stay Open (Batch Scan)` to keep WrapNAPS open for additional scans.
 6. Finally click `Scan` to start the scan. You will be presented with with a tooltip showing "Scanning..."
 - Click `NAPS2` to run the full NAPS2 (Not another PDF Scanner) application.
@@ -38,6 +39,6 @@ You can download the latest release in the releases section of this repo. The re
 - `~!Recovery` can be called manually if the current version is not functioning as expected. It will roll back the current `Init.NAPS2.exe` to a previous version. You will be presented with a list of available versions. The function depepnds on the `Snaps` directory. **THIS FEATURE IS NOT CURRENTLY IMPLEMENTED.**
 
 # Screenshot
+![image](https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/f4ab9ada-050a-4252-b810-e1cbbf4860f5)
 
-<img src="https://github.com/BiatuAutMiahn/WrapNAPS/assets/6149596/717917fd-7698-4561-b27b-45b1c47829eb" height="246">
 
