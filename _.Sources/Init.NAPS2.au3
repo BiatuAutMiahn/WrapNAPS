@@ -3,11 +3,12 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=WrapNAPS2
-#AutoIt3Wrapper_Res_Fileversion=1.2310.715.2259
+#AutoIt3Wrapper_Res_Fileversion=1.2312.1010.5648
 #AutoIt3Wrapper_Res_ProductName=WrapNAPS2
-#AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
-#AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
 #AutoIt3Wrapper_Res_Language=1033
+#AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
+#AutoIt3Wrapper_Run_Au3Stripper=y
+#Au3Stripper_Parameters=/tl /debug /mo
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
 
 #cs ----------------------------------------------------------------------------
@@ -37,7 +38,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2310.715.2259"
+Global Const $VERSION = "1.2312.1010.5052"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
@@ -64,6 +65,7 @@ Global $sInitialSaveDir=@UserProfileDir&"\Documents"
 ;Global $sOneDrivePath=@UserProfileDir&"\OneDrive"; redacted CPNI
 Global $sDestPath;=$sOneDrivePath&'\'&$sSaveDir
 Global $oWia,$iScanModLast=-1
+Global $iScanInterval=500
 Global $aScanners[1][4]
 $aScanners[0][0]=0
 
@@ -226,7 +228,7 @@ GUIRegisterMsg($WM_COMMAND, "WM_COMMAND")
 GUISetState(@SW_SHOW,$hMain)
 getScanners(1)
 AdlibRegister("_DoUpdate")
-AdlibRegister("_rescan",1000)
+AdlibRegister("_rescan",$iScanInterval)
 
 While 1
 	$nMsg = GUIGetMsg()
@@ -278,7 +280,7 @@ While 1
             GUICtrlSetState($idBtnScan,$GUI_ENABLE)
             GUICtrlSetState($idBtnNAPS,$GUI_ENABLE)
             GUICtrlSetState($idBtnExit,$GUI_ENABLE)
-            AdlibRegister("_rescan",1000)
+            AdlibRegister("_rescan",$iScanInterval)
         Case $idBtnScan
             GUICtrlSetState($idScanner,$GUI_DISABLE)
             GUICtrlSetState($idRadDplx,$GUI_DISABLE)
@@ -335,6 +337,23 @@ While 1
                         Sleep(250)
                         ToolTip('')
                         MsgBox(16,$sTitle,$aErrMsgs[$iIdx])
+						GUICtrlSetState($idScanner,$GUI_ENABLE)
+						GUICtrlSetState($idRadFlat,(BitAND($aScanners[$iScanner][2],0x1)?$GUI_ENABLE:$GUI_DISABLE))
+						GUICtrlSetState($idRadFeed,(BitAND($aScanners[$iScanner][2],0x2)?$GUI_ENABLE:$GUI_DISABLE))
+						GUICtrlSetState($idRadDplx,(BitAND($aScanners[$iScanner][2],0x4)?$GUI_ENABLE:$GUI_DISABLE))
+						If BitAND($iScanSrc,0x1) Then GUICtrlSetState($idRadFlat,$GUI_CHECKED)
+						If BitAND($iScanSrc,0x2) Then GUICtrlSetState($idRadFeed,$GUI_CHECKED)
+						If BitAND($iScanSrc,0x4) Then GUICtrlSetState($idRadDplx,$GUI_CHECKED)
+						GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+						GUICtrlSetState($idRPSDir,$GUI_ENABLE)
+						GUICtrlSetState($idRPSScan,$GUI_ENABLE)
+						GUICtrlSetState($idRPSNada,$GUI_ENABLE)
+						GUICtrlSetState($idChkRemb,$GUI_ENABLE)
+						GUICtrlSetState($idChkStay,$GUI_ENABLE)
+						GUICtrlSetState($idBtnScan,$GUI_ENABLE)
+						GUICtrlSetState($idBtnNAPS,$GUI_ENABLE)
+						GUICtrlSetState($idBtnExit,$GUI_ENABLE)
+						AdlibRegister("_rescan",$iScanInterval)
                         ContinueLoop 2
                     EndIf
                 Next
@@ -353,9 +372,12 @@ While 1
                 _Exit(0)
             EndIf
             GUICtrlSetState($idScanner,$GUI_ENABLE)
-            GUICtrlSetState($idRadDplx,$GUI_ENABLE)
-            GUICtrlSetState($idRadFeed,$GUI_ENABLE)
-            GUICtrlSetState($idRadFlat,$GUI_ENABLE)
+			GUICtrlSetState($idRadFlat,(BitAND($aScanners[$iScanner][2],0x1)?$GUI_ENABLE:$GUI_DISABLE))
+			GUICtrlSetState($idRadFeed,(BitAND($aScanners[$iScanner][2],0x2)?$GUI_ENABLE:$GUI_DISABLE))
+			GUICtrlSetState($idRadDplx,(BitAND($aScanners[$iScanner][2],0x4)?$GUI_ENABLE:$GUI_DISABLE))
+			If BitAND($iScanSrc,0x1) Then GUICtrlSetState($idRadFlat,$GUI_CHECKED)
+			If BitAND($iScanSrc,0x2) Then GUICtrlSetState($idRadFeed,$GUI_CHECKED)
+			If BitAND($iScanSrc,0x4) Then GUICtrlSetState($idRadDplx,$GUI_CHECKED)
             GUICtrlSetState($idChkRemb,$GUI_ENABLE)
             GUICtrlSetState($idRPSDir,$GUI_ENABLE)
             GUICtrlSetState($idRPSScan,$GUI_ENABLE)
@@ -365,7 +387,7 @@ While 1
             GUICtrlSetState($idBtnScan,$GUI_ENABLE)
             GUICtrlSetState($idBtnNAPS,$GUI_ENABLE)
             GUICtrlSetState($idBtnExit,$GUI_ENABLE)
-            AdlibRegister("_rescan",1000)
+            AdlibRegister("_rescan",$iScanInterval)
 	EndSwitch
 WEnd
 
@@ -629,6 +651,11 @@ EndFunc   ;==>_Base64Decode
 ;~ EndFunc
 
 Func _UpdProfile()
+	if $iScanner>UBound($aScanners,1) Then
+		_Log("Error: iScanners > aScanners.")
+		_MsgNoProfUpdate()
+		Return SetError(1,1,0)
+	EndIf
     Local $bWNPF
     Local $bWNPD
     Local $bWNPG
@@ -645,7 +672,7 @@ Func _UpdProfile()
         If $hFile=-1 And $bExists Then
             _Log("Error: '"&$sProfilePath&"' exists, but cannot be opened for reading.")
             _MsgNoProfUpdate()
-            Return SetError(1,1,0)
+            Return SetError(1,2,0)
         EndIf
         _Log("Info: Reading NAPS2 Profiles.")
         Local $sData=FileRead($hFile)
@@ -669,12 +696,12 @@ Func _UpdProfile()
                     If Not @extended Then
                         _Log("Error: Couldn't update NAPS2 profile's Device ID property. ('<ID>"&$sId&"</ID>' -> '<ID>"&$aScanners[$iScanner][1]&"</ID>')","_UpdProfile")
                         _MsgNoProfUpdate()
-                        Return SetError(1,2,0)
+                        Return SetError(1,3,0)
                     EndIf
                 Else
                     _Log("Error: NAPS2 profile does not contain a Device ID property.","_UpdProfile")
                     _MsgNoProfUpdate()
-                    Return SetError(1,3,0)
+                    Return SetError(1,4,0)
                 EndIf
                 $sName=_XmlGetField($sNewProfile,"Name")
                 If Not @Error Then
@@ -682,19 +709,19 @@ Func _UpdProfile()
                     If Not @extended Then
                         _Log("Error: Couldn't update NAPS2 profile's Device Name property. ('<Name>"&$sName&"</Name>' -> '<Name>"&$aScanners[$iScanner][0]&"</Name>')","_UpdProfile")
                         _MsgNoProfUpdate()
-                        Return SetError(1,4,0)
+                        Return SetError(1,5,0)
                     EndIf
                 Else
                     _Log("Error: NAPS2 profile does not contain a Device Name property.","_UpdProfile")
                     _MsgNoProfUpdate()
-                    Return SetError(1,5,0)
+                    Return SetError(1,6,0)
                 EndIf
                 ; Replace profile in xml.
                 $sData=StringReplace($sData,$sProfile,$sNewProfile)
                 If Not @extended Then
                     _Log("Error: Couldn't replace old profile string.","_UpdProfile")
                     _MsgNoProfUpdate()
-                    Return SetError(1,6,0)
+                    Return SetError(1,7,0)
                 EndIf
                 Switch $sDisplayName
                     Case $sAlias&"_Feeder"
@@ -767,7 +794,7 @@ Func _UpdProfile()
                 _Log("Error: '"&$sProfilePath&"' cannot be opened for writing.")
             EndIf
             _MsgNoProfUpdate()
-            Return SetError(1,1,0)
+            Return SetError(1,11,0)
         EndIf
         Local $sData='<?xml version="1.0" encoding="utf-8"?>'&@CRLF
         $sData&='<ArrayOfScanProfile>'&@CRLF
