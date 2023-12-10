@@ -3,10 +3,11 @@
 #AutoIt3Wrapper_Outfile_x64=..\Init.NAPS2.exe
 #AutoIt3Wrapper_UseUpx=y
 #AutoIt3Wrapper_Res_Description=WrapNAPS2
-#AutoIt3Wrapper_Res_Fileversion=1.2312.1010.5648
+#AutoIt3Wrapper_Res_Fileversion=1.2312.1016.2418
 #AutoIt3Wrapper_Res_ProductName=WrapNAPS2
 #AutoIt3Wrapper_Res_Language=1033
 #AutoIt3Wrapper_Run_After=echo %fileversion%>..\VERSION
+#AutoIt3Wrapper_Res_Fileversion_Use_Template=1.%YY%MO.%DD%HH.%MI%SE
 #AutoIt3Wrapper_Run_Au3Stripper=y
 #Au3Stripper_Parameters=/tl /debug /mo
 #EndRegion ;**** Directives created by AutoIt3Wrapper_GUI ****
@@ -38,7 +39,7 @@
 
 #include "Includes\WinHttp.au3"
 
-Global Const $VERSION = "1.2312.1010.5052"
+Global Const $VERSION = "1.2312.1016.2418"
 Global Const $g_sSessMagic=_RandStr()
 Global Const $sAlias="WrapNAPS"
 Global $sTitle=$sAlias&" v"&$VERSION
